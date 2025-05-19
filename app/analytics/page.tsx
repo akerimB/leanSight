@@ -1,19 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
   Paper,
-  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
 } from '@mui/material';
 
+// Chart imports
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  BarChart,
+  Bar,
+} from 'recharts';
+
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('last30days');
+
+  // Dynamic data state
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch analytics summary when timeRange changes
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/analytics/summary?timeRange=${timeRange}`)
+      .then((res) => res.json())
+      .then((json) => setData(json))
+      .finally(() => setLoading(false));
+  }, [timeRange]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -34,55 +64,99 @@ export default function AnalyticsPage() {
         </FormControl>
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+      {loading ? (
+        <Typography>Loading...</Typography>
+      ) : data ? (
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+          {/* Overall Maturity Score */}
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Overall Maturity Score
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Average score across all departments
-            </Typography>
             <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="h2">3.5</Typography>
+              <Typography variant="h2">{data.overallAvg.toFixed(2)}</Typography>
             </Box>
           </Paper>
-        </Grid>
 
-        <Grid item xs={12} md={6}>
+          {/* Maturity Trend */}
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Maturity Trend
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={data.trends}>
+                <CartesianGrid strokeDasharray={'3 3'} />
+                <XAxis dataKey={'period'} />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="avgScore" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
+          </Paper>
+
+          {/* Dimension Breakdown */}
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Dimension Breakdown
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={data.dimensionBreakdown}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="dimensionName" />
+                <PolarRadiusAxis />
+                <Radar name="Avg Score" dataKey="avgScore" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </Paper>
+
+          {/* Category Distribution */}
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Category Distribution
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Score distribution across different lean categories
-            </Typography>
-            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {/* Add chart component here */}
-              <Typography variant="body1" color="text.secondary">
-                Chart placeholder
-              </Typography>
-            </Box>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data.categoryDistribution}>
+                <CartesianGrid strokeDasharray={'3 3'} />
+                <XAxis dataKey={'categoryName'} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey={'avgScore'} fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
           </Paper>
-        </Grid>
 
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
+          {/* Department Comparison */}
+          <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Department Comparison
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Maturity scores by department
-            </Typography>
-            <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {/* Add chart component here */}
-              <Typography variant="body1" color="text.secondary">
-                Chart placeholder
-              </Typography>
-            </Box>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data.departmentComparison}>
+                <CartesianGrid strokeDasharray={'3 3'} />
+                <XAxis dataKey={'departmentName'} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey={'avgScore'} fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
           </Paper>
-        </Grid>
-      </Grid>
+
+          {/* Completion & Adoption */}
+          <Paper sx={{ p: 3, gridColumn: { xs: 'span 1', md: 'span 2' } }}>
+            <Typography variant="h6" gutterBottom>
+              Completion & Adoption
+            </Typography>
+            <Typography>Started: {data.completion.started}</Typography>
+            <Typography>Submitted: {data.completion.submitted}</Typography>
+            <Typography>Reviewed: {data.completion.reviewed}</Typography>
+            <Typography>
+              Avg Time to Complete: {(data.completion.avgTimeToComplete / 1000 / 60).toFixed(2)} mins
+            </Typography>
+          </Paper>
+        </Box>
+      ) : (
+        <Typography>No data available</Typography>
+      )}
     </Box>
   );
 }
