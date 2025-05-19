@@ -20,27 +20,28 @@ enum AssessmentStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      Role
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  uploadedEvidence Evidence[] @relation("UserEvidence")
+  id               String       @id @default(uuid())
+  email            String       @unique
+  name             String?
+  password         String
+  role             Role
+  companyId        String?
+  company          Company?     @relation(fields: [companyId], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  uploadedEvidence Evidence[]   @relation("UserEvidence")
   assessments      Assessment[] @relation("ExpertAssessment")
 }
 
 model Company {
-  id          String       @id @default(uuid())
-  name        String
-  sectorId    String
-  sector      Sector       @relation(fields: [sectorId], references: [id])
-  departments Department[]
-  users       User[]
-  assessments Assessment[]
+  id              String           @id @default(uuid())
+  name            String
+  sectorId        String
+  sector          Sector           @relation(fields: [sectorId], references: [id])
+  departments     Department[]
+  users           User[]
+  assessments     Assessment[]
+  templateConfigs TemplateConfig[]
 }
 
 model Department {
@@ -52,92 +53,93 @@ model Department {
 }
 
 model Sector {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String               @id @default(uuid())
+  name        String               @unique
   companies   Company[]
   descriptors MaturityDescriptor[]
 }
 
 model Assessment {
-  id            String     @id @default(uuid())
-  companyId     String
-  departmentId  String?
-  expertId      String
-  status        AssessmentStatus
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  scores        Score[]
-  evidence      Evidence[]
-  company       Company    @relation(fields: [companyId], references: [id])
-  department    Department?@relation(fields: [departmentId], references: [id])
-  expert        User       @relation("ExpertAssessment", fields: [expertId], references: [id])
+  id           String           @id @default(uuid())
+  companyId    String
+  departmentId String?
+  expertId     String
+  status       AssessmentStatus
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  scores       Score[]
+  evidence     Evidence[]
+  company      Company          @relation(fields: [companyId], references: [id])
+  department   Department?      @relation(fields: [departmentId], references: [id])
+  expert       User             @relation("ExpertAssessment", fields: [expertId], references: [id])
 }
 
 model Category {
-  id         String      @id @default(uuid())
-  name       String      @unique
+  id          String      @id @default(uuid())
+  name        String      @unique
   description String?
-  dimensions Dimension[]
+  dimensions  Dimension[]
 }
 
 model Dimension {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  descriptors MaturityDescriptor[]
-  scores      Score[]
-  evidence    Evidence[]
+  id              String               @id @default(uuid())
+  name            String
+  description     String
+  categoryId      String
+  category        Category             @relation(fields: [categoryId], references: [id])
+  descriptors     MaturityDescriptor[]
+  scores          Score[]
+  evidence        Evidence[]
+  templateConfigs TemplateConfig[]
 }
 
 model MaturityDescriptor {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   dimensionId String
   sectorId    String
-  level       Int      // 1-5
+  level       Int // 1-5
   description String
   dimension   Dimension @relation(fields: [dimensionId], references: [id])
   sector      Sector    @relation(fields: [sectorId], references: [id])
 }
 
 model Score {
-  id            String   @id @default(uuid())
-  assessmentId  String
-  dimensionId   String
-  level         Int      // 1-5
-  quantitative  Float?
-  notes         String?
-  perception    Boolean  // true: perception-based, false: evidence-backed
-  auditTrail    String?
-  assessment    Assessment @relation(fields: [assessmentId], references: [id])
-  dimension     Dimension  @relation(fields: [dimensionId], references: [id])
+  id           String     @id @default(uuid())
+  assessmentId String
+  dimensionId  String
+  level        Int // 1-5
+  quantitative Float?
+  notes        String?
+  perception   Boolean // true: perception-based, false: evidence-backed
+  auditTrail   String?
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  dimension    Dimension  @relation(fields: [dimensionId], references: [id])
 }
 
 model Evidence {
-  id            String   @id @default(uuid())
-  assessmentId  String
-  dimensionId   String
-  fileUrl       String
-  fileType      String
-  uploadedById  String
-  notes         String?
-  uploadedAt    DateTime @default(now())
-  assessment    Assessment @relation(fields: [assessmentId], references: [id])
-  dimension     Dimension  @relation(fields: [dimensionId], references: [id])
-  uploadedBy    User       @relation("UserEvidence", fields: [uploadedById], references: [id])
+  id           String     @id @default(uuid())
+  assessmentId String
+  dimensionId  String
+  fileUrl      String
+  fileType     String
+  uploadedById String
+  notes        String?
+  uploadedAt   DateTime   @default(now())
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  dimension    Dimension  @relation(fields: [dimensionId], references: [id])
+  uploadedBy   User       @relation("UserEvidence", fields: [uploadedById], references: [id])
 }
 
 model TemplateConfig {
-  id          String      @id @default(uuid())
+  id          String   @id @default(uuid())
   companyId   String
   dimensionId String
-  enabled     Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  company     Company     @relation(fields: [companyId], references: [id])
-  dimension   Dimension   @relation(fields: [dimensionId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+  dimension Dimension @relation(fields: [dimensionId], references: [id])
 
   @@unique([companyId, dimensionId])
-} 
+}

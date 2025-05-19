@@ -29,7 +29,12 @@ import {
   ListItemText,
   Pagination,
   TextField,
+  LinearProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 interface Company {
   id: string;
@@ -44,6 +49,7 @@ interface Descriptor {
 interface Dimension {
   id: string;
   name: string;
+  description: string;
   descriptors: Descriptor[];
 }
 interface Category {
@@ -90,6 +96,7 @@ export default function AssessmentPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const autosaveRef = useRef<NodeJS.Timeout | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | false>(false);
 
   // Load past assessments list
   useEffect(() => {
@@ -271,7 +278,7 @@ export default function AssessmentPage() {
                  <ListItem key={a.id} secondaryAction={<Button size="small" onClick={() => handleResume(a.id)}>Resume</Button>}>
                    <ListItemText
                      primary={`${a.company.name} - ${a.department?.name ?? 'Company-wide'}`}
-                     secondary={`${a.status} • ${new Date(a.updatedAt).toLocaleString()}`}
+                     secondary={`${a.status} • ${new Date(a.updatedAt).toLocaleString()} • ${a._count?.scores || 0} answers`}
                    />
                  </ListItem>
                ))}
@@ -310,31 +317,101 @@ export default function AssessmentPage() {
           Array(3).fill(null).map((_, i) => <Skeleton key={i} variant="rectangular" height={100} sx={{ mb: 2 }} />)
         ) : (
           <Box>
-            {template.map((category) => (
-              <Box key={category.id} sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>{category.name}</Typography>
-                {category.dimensions.map((dim) => (
-                  <Card key={dim.id} sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Typography variant="subtitle1" gutterBottom>{dim.name}</Typography>
-                      <RadioGroup
-                        value={answers[dim.id] || ''}
-                        onChange={(e) => handleAnswerChange(dim.id, Number(e.target.value))}
-                      >
-                        {dim.descriptors.map((desc) => (
-                          <FormControlLabel
-                            key={desc.id}
-                            value={desc.level}
-                            control={<Radio />}
-                            label={desc.description}
-                          />
-                        ))}
-                      </RadioGroup>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            ))}
+            {template.map((category) => {
+              // Calculate per-category progress
+              const total = category.dimensions.length;
+              const answered = category.dimensions.filter(dim => answers[dim.id]).length;
+              return (
+                <Accordion
+                  key={category.id}
+                  expanded={expandedCategory === category.id}
+                  onChange={(_, isExpanded) => setExpandedCategory(isExpanded ? category.id : false)}
+                  sx={{ mb: 2 }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMore />}>
+                    <Typography variant="h6">{category.name}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <Box sx={{ minWidth: 120 }}>
+                        <Typography variant="body2" color="text.secondary" align="right">
+                          {answered} / {total} answered
+                        </Typography>
+                        <Box sx={{ width: 120 }}>
+                          <LinearProgress variant="determinate" value={total ? (answered / total) * 100 : 0} sx={{ height: 6, borderRadius: 3 }} />
+                        </Box>
+                      </Box>
+                    </Box>
+                    {category.dimensions.map((dim) => {
+                      return (
+                        <Accordion key={dim.id} sx={{ mb: 1 }}>
+                          <AccordionSummary expandIcon={<ExpandMore />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                              <Box sx={{ flexGrow: 1 }}>
+                                <Typography variant="subtitle1">{dim.name}</Typography>
+                                {dim.description && (
+                                  <Typography variant="body2" color="text.secondary">{dim.description}</Typography>
+                                )}
+                              </Box>
+                              {answers[dim.id] ? (
+                                <Typography variant="caption" color="success.main">Level {answers[dim.id]}</Typography>
+                              ) : null}
+                            </Box>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                              <Box component="thead">
+                                <Box component="tr">
+                                  <Box component="th" sx={{ textAlign: 'left', p: 1, fontWeight: 600 }}>Level</Box>
+                                  <Box component="th" sx={{ textAlign: 'left', p: 1, fontWeight: 600 }}>Description</Box>
+                                </Box>
+                              </Box>
+                              <Box component="tbody">
+                                {dim.descriptors.map((desc) => (
+                                  <Box
+                                    component="tr"
+                                    key={desc.id}
+                                    sx={{
+                                      backgroundColor: answers[dim.id] === desc.level ? 'primary.light' : 'inherit',
+                                      transition: 'background 0.2s',
+                                    }}
+                                    onClick={() => {
+                                      if (answers[dim.id] === desc.level) {
+                                        handleAnswerChange(dim.id, 0);
+                                      } else {
+                                        handleAnswerChange(dim.id, desc.level);
+                                      }
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <Box component="td" sx={{ p: 1, width: 60 }}>
+                                      <Radio
+                                        checked={answers[dim.id] === desc.level}
+                                        value={desc.level}
+                                        onChange={() => {
+                                          if (answers[dim.id] === desc.level) {
+                                            handleAnswerChange(dim.id, 0);
+                                          } else {
+                                            handleAnswerChange(dim.id, desc.level);
+                                          }
+                                        }}
+                                        color="primary"
+                                      />
+                                    </Box>
+                                    <Box component="td" sx={{ p: 1 }}>{desc.description}</Box>
+                                  </Box>
+                                ))}
+                              </Box>
+                            </Box>
+                          </AccordionDetails>
+                        </Accordion>
+                      );
+                    })}
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
           </Box>
         )
       )}

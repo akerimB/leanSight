@@ -29,8 +29,21 @@ import {
   Bar,
 } from 'recharts';
 
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('last30days');
+
+  // Helper for heatmap cell coloring
+  const getHeatColor = (value: number): string => {
+    const hue = ((5 - value) / 4) * 120;
+    return `hsl(${hue}, 75%, 75%)`;
+  };
 
   // Dynamic data state
   const [data, setData] = useState<any>(null);
@@ -67,6 +80,7 @@ export default function AnalyticsPage() {
       {loading ? (
         <Typography>Loading...</Typography>
       ) : data ? (
+        <>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
           {/* Overall Maturity Score */}
           <Paper sx={{ p: 3, height: '100%' }}>
@@ -154,6 +168,80 @@ export default function AnalyticsPage() {
             </Typography>
           </Paper>
         </Box>
+
+        {/* Advanced Metrics */}
+        <Box sx={{ mt: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+          {/* Benchmarking */}
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Benchmarking
+            </Typography>
+            <Typography>Global Avg: {data.benchmark.globalAvg.toFixed(2)}</Typography>
+            <Typography>Your Company Avg: {data.benchmark.companyAvg.toFixed(2)}</Typography>
+          </Paper>
+          {/* Evidence Counts */}
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Evidence Counts
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={data.evidenceCounts}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="dimensionName" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+          {/* Cohort Analysis */}
+          <Paper sx={{ p: 3, gridColumn: { xs: 'span 1', md: 'span 2' } }}>
+            <Typography variant="h6" gutterBottom>
+              Cohort Analysis
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={data.cohort}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="cohort" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="avgScore" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
+          </Paper>
+          {/* Heatmap */}
+          <Paper sx={{ p: 3, gridColumn: { xs: 'span 1', md: 'span 2' } }}>
+            <Typography variant="h6" gutterBottom>
+              Department × Category Heatmap
+            </Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Department \ Category</TableCell>
+                    {data.heatmap[0]?.categories.map((cat: { categoryId: string; categoryName: string; avgScore: number }) => (
+                      <TableCell key={cat.categoryId}>{cat.categoryName}</TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.heatmap.map((row: { departmentId: string; departmentName: string; categories: any[] }) => (
+                    <TableRow key={row.departmentId}>
+                      <TableCell>{row.departmentName}</TableCell>
+                      {row.categories.map((cell: { categoryId: string; categoryName: string; avgScore: number }) => (
+                        <TableCell
+                          key={cell.categoryId}
+                          sx={{ backgroundColor: getHeatColor(cell.avgScore) }}
+                        >{cell.avgScore.toFixed(2)}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Box>
+        </>
       ) : (
         <Typography>No data available</Typography>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -16,10 +16,13 @@ import {
   Button,
   IconButton,
   Chip,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import UserDialog from '@/components/UserDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -47,18 +50,63 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const mockUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User', status: 'Active' },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'User', status: 'Inactive' },
-];
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  companyId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  active: boolean;
+}
 
 export default function AdminPage() {
   const [tabValue, setTabValue] = useState(0);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<{id:string;name:string}[]>([]);
+  const [compLoading, setCompLoading] = useState<boolean>(false);
+  const [compError, setCompError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
+
+  // Helper to fetch users
+  const fetchUsers = () => {
+    setLoading(true);
+    fetch('/api/admin/users', { credentials: 'include' })
+      .then((res) => res.ok ? res.json() : Promise.reject('Failed to fetch users'))
+      .then((data: User[]) => {
+        // Default active to true if not provided
+        const usersWithStatus = data.map(u => ({ ...u, active: u.active ?? true }));
+        setUsers(usersWithStatus);
+        setErrorMsg(null);
+      })
+      .catch((err) => setErrorMsg(String(err)))
+      .finally(() => setLoading(false));
+  };
+
+  // Helper to fetch companies for dropdown
+  const fetchCompanies = () => {
+    setCompLoading(true);
+    fetch('/api/admin/companies', { credentials: 'include' })
+      .then((res) => res.ok ? res.json() : Promise.reject('Failed to fetch companies'))
+      .then((data: any[]) => { setCompanies(data.map(c => ({ id: c.id, name: c.name }))); setCompError(null); })
+      .catch((err) => setCompError(String(err)))
+      .finally(() => setCompLoading(false));
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  useEffect(() => {
+    if (tabValue === 0) {
+      fetchUsers();
+      fetchCompanies();
+    }
+  }, [tabValue]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -83,10 +131,18 @@ export default function AdminPage() {
             <Button
               variant="contained"
               startIcon={<PersonAddIcon />}
+              onClick={() => { setEditingUser(undefined); setDialogOpen(true); }}
             >
               Add User
             </Button>
           </Box>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : errorMsg ? (
+            <Alert severity="error">{errorMsg}</Alert>
+          ) : (
           <TableContainer>
             <Table>
               <TableHead>
@@ -99,29 +155,43 @@ export default function AdminPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {mockUsers.map((user) => (
+                {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Chip 
+                      <Chip
                         label={user.role}
-                        color={user.role === 'Admin' ? 'primary' : 'default'}
+                        color={user.role === 'ADMIN' ? 'primary' : 'default'}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={user.status}
-                        color={user.status === 'Active' ? 'success' : 'error'}
+                      <Chip
+                        label={user.active ? 'Active' : 'Inactive'}
+                        color={user.active ? 'success' : 'error'}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => { setEditingUser(user); setDialogOpen(true); }}
+                      >
                         <EditIcon />
                       </IconButton>
-                      <IconButton size="small" color="error">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          if (confirm('Delete this user?')) {
+                            fetch(`/api/admin/users/${user.id}`, { method: 'DELETE', credentials: 'include' })
+                              .then((res) => res.ok ? fetchUsers() : Promise.reject('Failed to delete'))
+                              .catch(() => alert('Delete failed'));
+                          }
+                        }}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -130,6 +200,14 @@ export default function AdminPage() {
               </TableBody>
             </Table>
           </TableContainer>
+          )}
+          <UserDialog
+            open={dialogOpen}
+            onClose={() => setDialogOpen(false)}
+            onSuccess={() => fetchUsers()}
+            user={editingUser}
+            companies={companies}
+          />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>

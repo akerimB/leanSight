@@ -137,11 +137,109 @@ export async function GET(request: Request) {
   });
   const activeUsers = Object.entries(activeUsersMap).map(([period, set]) => ({ period, count: set.size }));
 
-  // Stub advanced metrics
-  const cohort: any[] = [];
-  const benchmark: any[] = [];
-  const heatmap: any[] = [];
-  const evidence: any[] = [];
+  // 6. Benchmarking (global vs. company)
+  const globalScores = await prisma.score.findMany({
+    where: { assessment: { createdAt: { gte: from, lte: to } } },
+    select: { level: true },
+  });
+  const globalAvg = globalScores.length
+    ? globalScores.reduce((sum, s) => sum + s.level, 0) / globalScores.length
+    : 0;
+
+  // Compute company average (fallback to global if no companyId)
+  let companyAvg: number;
+  if (userCompanyId) {
+    const companyScores = await prisma.score.findMany({
+      where: { assessment: { createdAt: { gte: from, lte: to }, companyId: userCompanyId } },
+      select: { level: true },
+    });
+    companyAvg = companyScores.length
+      ? companyScores.reduce((sum, s) => sum + s.level, 0) / companyScores.length
+      : 0;
+  } else {
+    companyAvg = globalAvg;
+  }
+  const benchmark = { globalAvg, companyAvg };
+
+  // 7. Evidence counts per dimension
+  const evGroup = await prisma.evidence.groupBy({
+    by: ['dimensionId'],
+    where: { uploadedAt: { gte: from, lte: to }, assessment: assessmentWhere },
+    _count: { id: true },
+  });
+  const evidenceCounts = evGroup.map((e) => ({
+    dimensionId: e.dimensionId,
+    dimensionName: dimensions.find((d) => d.id === e.dimensionId)?.name || '',
+    count: e._count.id,
+  }));
+
+  // 8. Cohort analysis by expert's first assessment quarter
+  const expertFirst: Record<string, Date> = {};
+  assessments.forEach((a) => {
+    if (!expertFirst[a.expertId] || a.createdAt < expertFirst[a.expertId]) {
+      expertFirst[a.expertId] = a.createdAt;
+    }
+  });
+  const expertIds = Object.keys(expertFirst);
+  // Build assessment filter for cohort
+  const cohortAssessmentWhere: any = { createdAt: { gte: from, lte: to }, expertId: { in: expertIds } };
+  if (assessmentWhere.companyId) {
+    cohortAssessmentWhere.companyId = assessmentWhere.companyId;
+  }
+  const cohortScores = await prisma.score.findMany({
+    where: { assessment: cohortAssessmentWhere },
+    select: { level: true, assessment: { select: { expertId: true } } },
+  });
+  const getQuarter = (date: Date) => {
+    const m = date.getMonth();
+    return `${date.getFullYear()}-Q${Math.floor(m / 3) + 1}`;
+  };
+  const cohortMap: Record<string, { total: number; count: number }> = {};
+  cohortScores.forEach(({ level, assessment }) => {
+    const q = getQuarter(expertFirst[assessment.expertId]);
+    if (!cohortMap[q]) cohortMap[q] = { total: 0, count: 0 };
+    cohortMap[q].total += level;
+    cohortMap[q].count += 1;
+  });
+  const cohort = Object.entries(cohortMap).map(([cohort, v]) => ({ cohort, avgScore: v.total / v.count }));
+
+  // 9. Heatmap: department × category averages
+  const heatRaw = await prisma.score.findMany({
+    where: { assessment: assessmentWhere },
+    select: {
+      level: true,
+      assessment: { select: { departmentId: true } },
+      dimension: { select: { category: { select: { id: true, name: true } } } },
+    },
+  });
+  const heatMap: Record<string, Record<string, { total: number; count: number }>> = {};
+  heatRaw.forEach(({ level, assessment, dimension }) => {
+    const deptId = assessment.departmentId || 'Unassigned';
+    const cat = dimension.category;
+    heatMap[deptId] = heatMap[deptId] || {};
+    heatMap[deptId][cat.id] = heatMap[deptId][cat.id] || { total: 0, count: 0 };
+    heatMap[deptId][cat.id].total += level;
+    heatMap[deptId][cat.id].count += 1;
+  });
+  const allCategories = await prisma.category.findMany({ select: { id: true, name: true } });
+  const deptIdsHeat = Object.keys(heatMap);
+  const deptsHeat = await prisma.department.findMany({
+    where: { id: { in: deptIdsHeat.filter((id) => id !== 'Unassigned') } },
+    select: { id: true, name: true },
+  });
+  const heatmap = deptIdsHeat.map((deptId) => {
+    const departmentName =
+      deptId === 'Unassigned' ? 'Unassigned' : deptsHeat.find((d) => d.id === deptId)?.name || '';
+    const categoriesData = allCategories.map((cat) => ({
+      categoryId: cat.id,
+      categoryName: cat.name,
+      avgScore:
+        heatMap[deptId][cat.id] && heatMap[deptId][cat.id].count
+          ? heatMap[deptId][cat.id].total / heatMap[deptId][cat.id].count
+          : 0,
+    }));
+    return { departmentId: deptId, departmentName, categories: categoriesData };
+  });
 
   return NextResponse.json({
     overallAvg,
@@ -151,9 +249,9 @@ export async function GET(request: Request) {
     departmentComparison,
     completion: { started, submitted, reviewed, avgTimeToComplete },
     activeUsers,
-    cohort,
     benchmark,
+    evidenceCounts,
+    cohort,
     heatmap,
-    evidence,
   });
 } 
