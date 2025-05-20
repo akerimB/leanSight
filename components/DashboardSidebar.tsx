@@ -11,7 +11,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const menuItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, href: '/dashboard' },
@@ -56,10 +56,10 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
           ))}
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: { sm: `${drawerWidth}px` } }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {children}
-      </Box>
+    </Box>
     </Box>
   );
 }
