@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Evidence" ALTER COLUMN "fileUrl" DROP NOT NULL,
+ALTER COLUMN "fileType" DROP NOT NULL;

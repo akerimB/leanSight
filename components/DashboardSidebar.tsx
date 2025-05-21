@@ -10,6 +10,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import BalanceIcon from '@mui/icons-material/Balance';
+import CategoryIcon from '@mui/icons-material/Category';
 
 const drawerWidth = 260;
 
@@ -17,6 +19,8 @@ const menuItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, href: '/dashboard' },
   { label: 'Assessment', icon: <AssessmentIcon />, href: '/assessment' },
   { label: 'Companies/Departments', icon: <BusinessIcon />, href: '/companies' },
+  { label: 'Weighting Schemes', icon: <BalanceIcon />, href: '/weighting-schemes' },
+  { label: 'Sectors', icon: <CategoryIcon />, href: '/sectors' },
   { label: 'Analytics', icon: <BarChartIcon />, href: '/analytics' },
   { label: 'Settings', icon: <SettingsIcon />, href: '/settings' },
   { label: 'Admin', icon: <AdminPanelSettingsIcon />, href: '/admin' },

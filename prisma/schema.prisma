@@ -29,6 +29,7 @@ model User {
   company          Company?     @relation(fields: [companyId], references: [id])
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?    // Soft delete
   uploadedEvidence Evidence[]   @relation("UserEvidence")
   assessments      Assessment[] @relation("ExpertAssessment")
 }
@@ -42,6 +43,7 @@ model Company {
   users           User[]
   assessments     Assessment[]
   templateConfigs TemplateConfig[]
+  deletedAt       DateTime?        // Soft delete
 }
 
 model Department {
@@ -50,6 +52,7 @@ model Department {
   companyId   String
   company     Company      @relation(fields: [companyId], references: [id])
   assessments Assessment[]
+  deletedAt   DateTime?    // Soft delete
 }
 
 model Sector {
@@ -57,6 +60,8 @@ model Sector {
   name        String               @unique
   companies   Company[]
   descriptors MaturityDescriptor[]
+  deletedDescriptors DeletedMaturityDescriptor[]
+  deletedAt   DateTime?            // Soft delete
 }
 
 model Assessment {
@@ -67,11 +72,14 @@ model Assessment {
   status       AssessmentStatus
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?        // Soft delete
   scores       Score[]
   evidence     Evidence[]
   company      Company          @relation(fields: [companyId], references: [id])
   department   Department?      @relation(fields: [departmentId], references: [id])
   expert       User             @relation("ExpertAssessment", fields: [expertId], references: [id])
+  weightingSchemeId String?
+  weightingScheme   WeightingScheme? @relation(fields: [weightingSchemeId], references: [id])
 }
 
 model Category {
@@ -79,6 +87,8 @@ model Category {
   name        String      @unique
   description String?
   dimensions  Dimension[]
+  categoryWeightings CategoryWeight[]
+  deletedAt   DateTime?   // Soft delete
 }
 
 model Dimension {
@@ -88,9 +98,12 @@ model Dimension {
   categoryId      String
   category        Category             @relation(fields: [categoryId], references: [id])
   descriptors     MaturityDescriptor[]
+  deletedDescriptors DeletedMaturityDescriptor[]
   scores          Score[]
   evidence        Evidence[]
   templateConfigs TemplateConfig[]
+  dimensionWeightings DimensionWeight[]
+  deletedAt        DateTime?           // Soft delete
 }
 
 model MaturityDescriptor {
@@ -101,6 +114,24 @@ model MaturityDescriptor {
   description String
   dimension   Dimension @relation(fields: [dimensionId], references: [id])
   sector      Sector    @relation(fields: [sectorId], references: [id])
+  deletedAt   DateTime? // Soft delete
+
+  @@index([deletedAt])
+}
+
+model DeletedMaturityDescriptor {
+  id          String    @id @default(uuid())
+  originalId  String    @unique // Reference to the original descriptor
+  dimensionId String
+  sectorId    String
+  level       Int // 1-5
+  description String
+  deletedAt   DateTime  @default(now())
+  dimension   Dimension @relation(fields: [dimensionId], references: [id])
+  sector      Sector    @relation(fields: [sectorId], references: [id])
+
+  @@index([deletedAt])
+  @@index([originalId])
 }
 
 model Score {
@@ -114,17 +145,19 @@ model Score {
   auditTrail   String?
   assessment   Assessment @relation(fields: [assessmentId], references: [id])
   dimension    Dimension  @relation(fields: [dimensionId], references: [id])
+  deletedAt    DateTime?  // Soft delete
 }
 
 model Evidence {
   id           String     @id @default(uuid())
   assessmentId String
   dimensionId  String
-  fileUrl      String
-  fileType     String
+  fileUrl      String?    // Ensuring this is optional as per user requirement
+  fileType     String?    // Ensuring this is optional as per user requirement
   uploadedById String
   notes        String?
   uploadedAt   DateTime   @default(now())
+  deletedAt    DateTime?  // Soft delete field
   assessment   Assessment @relation(fields: [assessmentId], references: [id])
   dimension    Dimension  @relation(fields: [dimensionId], references: [id])
   uploadedBy   User       @relation("UserEvidence", fields: [uploadedById], references: [id])
@@ -137,9 +170,51 @@ model TemplateConfig {
   enabled     Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
 
   company   Company   @relation(fields: [companyId], references: [id])
   dimension Dimension @relation(fields: [dimensionId], references: [id])
 
   @@unique([companyId, dimensionId])
+}
+
+model WeightingScheme {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  isDefault   Boolean   @default(false)
+  deletedAt   DateTime? // Soft delete
+
+  categoryWeights CategoryWeight[]
+  assessments     Assessment[] // Assessments using this scheme
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CategoryWeight {
+  id                String   @id @default(uuid())
+  weight            Float    // Weight for this category within the overall scheme
+  categoryId        String
+  category          Category @relation(fields: [categoryId], references: [id])
+  weightingSchemeId String
+  weightingScheme   WeightingScheme @relation(fields: [weightingSchemeId], references: [id])
+
+  dimensionWeights  DimensionWeight[] // Optional: Specific weights for dimensions within this category
+
+  deletedAt         DateTime? // Soft delete
+
+  @@unique([categoryId, weightingSchemeId])
+}
+
+model DimensionWeight {
+  id               String         @id @default(uuid())
+  weight           Float          // Weight for this dimension relative to others in the same category (sums to 1.0 within category)
+  dimensionId      String
+  dimension        Dimension      @relation(fields: [dimensionId], references: [id])
+  categoryWeightId String         // Links to the parent CategoryWeight
+  categoryWeight   CategoryWeight @relation(fields: [categoryWeightId], references: [id])
+  deletedAt        DateTime?      // Soft delete
+
+  @@unique([dimensionId, categoryWeightId])
 }
