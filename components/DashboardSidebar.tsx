@@ -12,6 +12,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import BalanceIcon from '@mui/icons-material/Balance';
 import CategoryIcon from '@mui/icons-material/Category';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 const drawerWidth = 260;
 
@@ -22,6 +23,7 @@ const menuItems = [
   { label: 'Weighting Schemes', icon: <BalanceIcon />, href: '/weighting-schemes' },
   { label: 'Sectors', icon: <CategoryIcon />, href: '/sectors' },
   { label: 'Analytics', icon: <BarChartIcon />, href: '/analytics' },
+  { label: 'Results', icon: <ShowChartIcon />, href: '/results' },
   { label: 'Settings', icon: <SettingsIcon />, href: '/settings' },
   { label: 'Admin', icon: <AdminPanelSettingsIcon />, href: '/admin' },
 ];

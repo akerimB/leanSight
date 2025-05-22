@@ -66,7 +66,7 @@ async function main() {
     data: {
       email: "admin@example.com",
       name: "Admin User",
-      password: "hashedpassword123",
+      password: "$2y$10$CoA5j9birz57ieACu9gxOu3YUHj0FqYo2600fEup2WHGs0UF5Z/VK",
       role: "ADMIN",
       companyId: companyA.id,
     },
@@ -75,7 +75,7 @@ async function main() {
     data: {
       email: "expert@example.com",
       name: "Expert User",
-      password: "hashedpassword123",
+      password: "$2y$10$CoA5j9birz57ieACu9gxOu3YUHj0FqYo2600fEup2WHGs0UF5Z/VK",
       role: "EXPERT",
       companyId: companyA.id,
     },
@@ -84,7 +84,7 @@ async function main() {
     data: {
       email: "viewer@example.com",
       name: "Viewer User",
-      password: "hashedpassword123",
+      password: "$2y$10$CoA5j9birz57ieACu9gxOu3YUHj0FqYo2600fEup2WHGs0UF5Z/VK",
       role: "VIEWER",
       companyId: companyB.id,
     },
@@ -95,7 +95,7 @@ async function main() {
     data: {
       email: "deleteduser@example.com",
       name: "Soft Deleted User",
-      password: "hashedpassword123",
+      password: "$2y$10$CoA5j9birz57ieACu9gxOu3YUHj0FqYo2600fEup2WHGs0UF5Z/VK",
       role: "VIEWER",
       companyId: companyB.id,
       deletedAt: new Date(), // Soft deleted
@@ -923,745 +923,6 @@ async function main() {
   ]
 },
 
-// 1. Leadership Commitment — Logistics & Supply Chain
-{
-  dimensionName: "Leadership Commitment",
-  sectorName: "Logistics",
-  levels: [
-    "Leaders in logistics see Lean primarily as a temporary cost-cutting initiative, with little long-term engagement. Their involvement is limited to crisis management when delivery failures or stockouts occur. Lean efforts are disconnected and sporadic, with unclear expectations communicated to staff. There is minimal visible leadership presence on the warehouse floor or in transportation operations. Employees often perceive Lean as a management trend rather than a sustained strategy.",
-    "Some logistics leaders participate in Lean training or pilot improvement projects, usually reacting to specific operational challenges. Support is inconsistent and often symbolic, with few follow-up actions after events. Gemba walks and shop-floor visits begin but happen irregularly and lack structured coaching. Communication about Lean is top-down and limited, causing frontline teams to feel disconnected from leadership goals. Lean awareness grows slowly but is not yet embedded.",
-    "Leaders actively sponsor Lean initiatives targeting key supply chain metrics such as on-time delivery and inventory accuracy. Regular performance reviews include Lean objectives, and managers conduct purposeful Gemba walks to understand frontline issues. Feedback loops improve, enabling two-way communication between staff and management. Cross-functional collaboration starts breaking down silos between warehousing, transport, and procurement functions. Lean becomes more visible as a strategic priority.",
-    "Lean leadership is fully integrated into logistics operations and strategic planning. Senior leaders coach middle managers regularly and participate in continuous improvement activities. Lean metrics are embedded into dashboards and business reviews, ensuring alignment with corporate goals. Resources are dedicated to sustaining Lean projects across the supply chain, including supplier engagement. Leadership visibly champions Lean culture, driving employee motivation and innovation in operational processes.",
-    "Leadership in logistics owns and drives Lean as a core strategic imperative, fostering a culture of continuous improvement and accountability. Decision-making is data-driven, leveraging real-time analytics and predictive tools to anticipate and resolve supply chain challenges proactively. Leaders empower teams at all levels to innovate and sustain improvements independently. The organization benchmarks itself externally and collaborates with suppliers and customers to extend Lean principles beyond internal operations. Lean becomes integral to the company’s identity and competitive advantage."
-  ]
-},
-
-// 2. Coaching & Role Modeling — Logistics & Supply Chain
-{
-  dimensionName: "Coaching & Role Modeling",
-  sectorName: "Logistics",
-  levels: [
-    "Coaching is minimal or absent; supervisors focus on task completion and meeting immediate targets. Feedback is often reactive and centered on errors rather than development. Lean language and behaviors are rarely modeled by leadership or supervisors. Problem-solving is mostly handled by supervisors themselves without involving operators. Lean principles are unfamiliar or seen as irrelevant by frontline staff.",
-    "Some supervisors attend Lean workshops and begin experimenting with basic coaching during improvement events. Coaching remains informal and inconsistent, usually reactive to issues rather than proactive. Role modeling is limited to certain leaders or isolated teams. Peer learning and mentoring are sporadic and lack structure. Operators receive little guidance on Lean thinking or problem-solving methods outside events.",
-    "Coaching becomes an expected part of supervisors’ roles, linked to regular Gemba walks and team huddles. Leaders use standardized coaching questions and provide feedback focused on root cause analysis and Lean tools. Visual coaching boards and checklists support development efforts. Operators begin documenting small improvements and sharing best practices. Coaching conversations encourage reflection and skill building within teams.",
-    "Managers receive formal Lean coaching training and mentor frontline supervisors regularly. Coaching is data-informed, focusing on continuous development and accountability. Role modeling of Lean behaviors becomes routine across shifts and departments. Coaching extends beyond immediate teams, promoting cross-functional learning. Visual tools and skill matrices are widely used to track progress and identify development needs.",
-    "Coaching is a strategic competency deeply embedded at all levels of the logistics organization. Master coaches support leadership development and frontline capability building. Lean language and behaviors are consistently modeled by leaders, reinforcing a culture of learning and continuous improvement. Coaching outcomes are tracked and linked to performance metrics and career progression. Peer coaching and mentoring networks thrive, sustaining Lean adoption company-wide."
-  ]
-},
-
-// 3. Lean Mindset Adoption — Logistics & Supply Chain
-{
-  dimensionName: "Lean Mindset Adoption",
-  sectorName: "Logistics",
-  levels: [
-    "Lean is viewed as a temporary program or cost-cutting exercise with little relevance to daily logistics work. Problem-solving is reactive, limited to firefighting disruptions or errors. Lean tools and concepts are unknown or inconsistently applied. Continuous improvement is not part of the organizational mindset. Employees feel disconnected from Lean goals.",
-    "Awareness of Lean tools like PDCA and 5 Whys begins, with occasional use during improvement events. Problem-solving is still event-driven and not embedded in daily operations. Successes are not widely shared, limiting organizational learning. Lean language is used sporadically and inconsistently. Employees remain skeptical of Lean’s long-term value.",
-    "Lean thinking starts to permeate daily conversations in logistics teams. Operators regularly apply problem-solving tools to address workflow issues and delays. Visual management supports Lean principles, and improvement ideas are actively collected and reviewed. Teams begin taking ownership of continuous improvement in their work areas. Collaboration between departments increases.",
-    "Lean mindset is well established and integrated into logistics operations. Teams proactively challenge existing processes and seek to reduce waste and variability. Lean principles are routinely used in meetings, planning, and decision-making. Cross-functional collaboration is strong, with teams working together to improve end-to-end supply chain flow. Continuous improvement behaviors are widespread.",
-    "Lean mindset is deeply ingrained and defines how logistics operates. Continuous improvement is instinctive, and teams innovate proactively to improve performance and customer satisfaction. Data-driven experimentation and learning cycles are common. Lean language and behaviors are consistent at all organizational levels. The company is recognized as a Lean leader in the logistics industry."
-  ]
-},
-
-// 4. Employee Empowerment — Logistics & Supply Chain
-{
-  dimensionName: "Employee Empowerment",
-  sectorName: "Logistics",
-  levels: [
-    "Operators have limited autonomy and decision-making authority. Suggestions for improvements are discouraged or ignored. Processes are rigid, with changes dictated top-down. There are no formal systems for collecting or implementing frontline ideas. Employees feel disengaged from improvement efforts.",
-    "Operators begin voicing ideas during team meetings, but implementation is inconsistent and dependent on supervisors. Ownership of improvements remains unclear, with many ideas stalling due to lack of follow-through. Suggestion systems may be informal or ineffective. Cross-training is limited. Employees remain cautious about raising issues.",
-    "Operators lead daily stand-up meetings and implement minor process changes within their teams. Visual boards track ideas, actions, and results, increasing transparency. Supervisors encourage idea sharing and recognize small wins. Cross-training improves workforce flexibility. Empowerment grows but may still be confined within individual teams.",
-    "Operators are cross-trained and rotate between stations, taking responsibility for team performance and improvements. Formal suggestion systems with regular follow-up are in place and trusted. Teams set targets for implemented improvements and mentor newer employees. Empowerment extends across departments, promoting wider collaboration. Psychological safety supports open communication.",
-    "Empowered employees independently identify and drive improvements across the supply chain. They co-design workflows, participate in planning, and lead structured improvement projects. The organization fosters a culture of autonomy and innovation, encouraging risk-taking within safe boundaries. Empowerment is reinforced by recognition programs and continuous learning opportunities. Employees take strategic ownership of operational excellence."
-  ]
-},
-
-// 5. Psychological Safety — Logistics & Supply Chain
-{
-  dimensionName: "Psychological Safety",
-  sectorName: "Logistics",
-  levels: [
-    "Fear of blame dominates, and mistakes are hidden or ignored. Open dialogue about errors or process issues is rare. Employees hesitate to raise concerns or challenge the status quo. There are no formal forums for honest discussion or learning. The culture inhibits innovation and improvement.",
-    "Some supervisors encourage feedback, but the environment remains inconsistent. Discussions of problems may occur privately but are avoided in group settings. Blame culture persists unintentionally. Improvement initiatives are largely top-down. Employees are wary of being vulnerable.",
-    "Teams hold open debriefs after incidents, focusing on learning rather than blame. Supervisors model vulnerability by admitting mistakes and encouraging input. Mistakes are treated as opportunities to improve systems and processes. Psychological safety increases, supporting more honest communication. Near-miss reporting begins to rise.",
-    "Psychological safety is embedded in daily team huddles and problem-solving meetings. Leaders actively model and reinforce a safe environment for sharing ideas and concerns. Structured forums exist to discuss breakdowns and near-misses constructively. Employees trust that raising issues leads to support, not punishment. Transparency in communication is high.",
-    "Psychological safety is a core organizational value, fully integrated into hiring, training, and leadership development. Teams confidently challenge unsafe or inefficient practices without fear. Feedback flows freely in all directions and is embraced as part of continuous improvement. The culture promotes bold experimentation and innovation. The logistics organization is resilient and adaptable."
-  ]
-},
-
-// 6. Cross-Level Communication — Logistics & Supply Chain
-{
-  dimensionName: "Cross-Level Communication",
-  sectorName: "Logistics",
-  levels: [
-    "Communication is primarily top-down, with limited opportunity for frontline operators to provide feedback. Important information often gets delayed or distorted as it moves through layers. Team meetings focus on task assignments rather than open dialogue. Feedback loops are weak or nonexistent, hindering timely problem-solving. Collaboration between shifts and departments is minimal.",
-    "Some formal communication channels exist, such as monthly newsletters or bulletin boards, but participation is largely passive. Frontline feedback is collected sporadically, often informally, with little visible follow-up. Cross-shift communication improves slightly but remains inconsistent. Escalation of issues can be slow and unclear. Communication is still largely one-way.",
-    "Daily tiered meetings and shift huddles establish structured two-way communication between operators and supervisors. Visual boards track key issues and progress on improvement actions. Supervisors begin representing operator concerns in management meetings. Communication across departments becomes more frequent and intentional. Teams start to build trust through regular updates.",
-    "Real-time escalation boards and issue trackers connect frontline teams with engineers and managers. Problems are addressed promptly, often in cross-functional meetings. Standardized visual tools support consistent communication, and frontline staff are invited to participate in reviews. Digital platforms may start to supplement face-to-face interactions. Communication is transparent and fosters collaboration.",
-    "Communication systems fully integrate frontline teams with leadership via digital and in-person channels. Feedback is traceable, timely, and leads to measurable action. Operators are engaged in strategic planning and problem-solving at all levels. Cross-department and cross-site communication is seamless, fostering a unified Lean culture. Open, honest dialogue drives continuous improvement."
-  ]
-},
-
-// 7. Lean Training and Education — Logistics & Supply Chain
-{
-  dimensionName: "Lean Training and Education",
-  sectorName: "Logistics",
-  levels: [
-    "Lean training is minimal or absent, with most employees unfamiliar with Lean terminology or tools. Learning occurs informally and inconsistently, often only during audits or crisis responses. There is no structured curriculum or ongoing education plan. Employees lack confidence in Lean concepts and how to apply them. Training resources are scarce.",
-    "Basic Lean training modules are introduced, often during onboarding or improvement events. Some operators and supervisors gain exposure to fundamental Lean tools such as 5S and PDCA, but application is inconsistent. Training focuses more on compliance than capability building. Refresher sessions are rare. Staff engagement with Lean education remains low.",
-    "Role-based training plans are established for operators, supervisors, and engineers, covering problem-solving tools, visual management, and safety integration. Training combines classroom instruction with on-the-job coaching and simulations. Teams begin applying learned skills in active improvement projects. Supervisors coach and reinforce Lean practices regularly. Training is tracked and linked to performance.",
-    "Structured Lean education pathways, including certifications like Yellow Belt, are available across the supply chain. Internal facilitators lead simulations and Kaizen training sessions. Learning is tied to career progression and improvement goals. Continuous development is embedded into organizational practices, supported by learning management systems. Training outcomes are evaluated for effectiveness.",
-    "Lean education is a strategic priority with a dedicated Lean academy or center of excellence. Partnerships with external experts bring in benchmarking and innovation. Training is adaptive, data-driven, and integrated with daily work and strategic initiatives. All employees continuously upgrade Lean competencies, and coaching is part of leadership development. Lean learning culture permeates the organization."
-  ]
-},
-
-// 8. Recognition and Celebration — Logistics & Supply Chain
-{
-  dimensionName: "Recognition and Celebration",
-  sectorName: "Logistics",
-  levels: [
-    "Improvement efforts receive little to no formal recognition, leading to low motivation among staff. Managers may acknowledge meeting output targets but rarely celebrate Lean-related achievements. There are no structured systems for sharing success stories. Employee contributions to Lean are often overlooked. Recognition is informal and inconsistent.",
-    "Occasional “Employee of the Month” or spot awards exist but rarely highlight Lean efforts specifically. Recognition tends to focus on individual performance rather than team-based improvements. Celebrations are infrequent, low visibility, and not linked to Lean outcomes. Motivation for continuous improvement remains weak. Peer-to-peer recognition is limited.",
-    "Teams and individuals are recognized regularly in meetings and newsletters for specific Lean improvements. Small rewards and informal acknowledgments encourage participation. Success stories are shared to build momentum and reinforce Lean values. Peer recognition begins to gain traction, fostering camaraderie. Recognition supports growing engagement.",
-    "Formal recognition programs are established, linking continuous improvement achievements to plant or corporate goals. Awards, bonuses, or time off are given for sustained improvements. Celebrations are timely, public, and involve leadership participation. Recognition is tied to both results and Lean behaviors. The culture of appreciation motivates ongoing involvement.",
-    "Recognition is deeply embedded into performance management and leadership reviews. Annual Lean summits celebrate organizational and team excellence. Peer-nominated awards and data-driven achievements reinforce participation and innovation. Employees take pride in driving improvements, and recognition sustains a high-performing Lean culture. Celebrations include external benchmarking and community engagement."
-  ]
-},
-
-// 9. Change Management Readiness — Logistics & Supply Chain
-{
-  dimensionName: "Change Management Readiness",
-  sectorName: "Logistics",
-  levels: [
-    "Resistance to change is common, fueled by poor communication, lack of training, and fear of disruption. Change initiatives are introduced abruptly without staff involvement. Employees often revert to old habits, undermining improvements. Training and support for change are minimal or absent. Change is seen as a burden rather than an opportunity.",
-    "Changes are piloted in isolated areas but with limited follow-up or feedback mechanisms. Operators receive instructions but lack understanding of the rationale behind changes. Communication about upcoming changes is often unclear or inconsistent. Resistance persists due to low transparency and limited involvement. Training on new processes is ad hoc.",
-    "Structured change processes include risk assessments, impact analyses, and operator input during planning. Training programs accompany rollouts, improving staff readiness. Feedback loops allow adjustments based on frontline experiences. Change leaders emerge across value streams to guide transitions. Employees begin accepting change as part of continuous improvement.",
-    "Change management is proactive, with roadmaps developed in collaboration with operators and stakeholders. Simulation and pilot programs prepare teams for major shifts. Pre- and post-implementation reviews capture lessons learned and enable continuous refinement. Visual tools and communication plans support smooth transitions. Resistance is actively managed and minimized.",
-    "Change readiness is institutionalized and tracked as a core competency. Leaders coach teams through transitions, using real-time feedback and data-driven adjustments. Cross-functional collaboration ensures minimal disruption during change. Continuous improvement and change are inseparable, with teams innovating and iterating proactively. The organization quickly adapts to evolving conditions."
-  ]
-},
-
-// 10. Daily Problem-Solving Culture — Logistics & Supply Chain
-{
-  dimensionName: "Daily Problem-Solving Culture",
-  sectorName: "Logistics",
-  levels: [
-    "Problem-solving is reactive and informal, often limited to crisis response. There are few standardized tools or processes, and issues frequently recur. Operators rely on supervisors to fix problems without deeper analysis. Documentation of problems and solutions is minimal. Continuous improvement is not part of daily work.",
-    "Basic problem-solving tools like 5 Whys and root cause analysis are introduced during improvement events. Teams begin documenting issues and countermeasures but focus remains event-driven. Supervisors handle most problem resolution with limited team involvement. Feedback on problem status is inconsistent. Learning from problems is limited.",
-    "Structured problem-solving is integrated into daily work with regular use of Lean tools. Teams lead investigations into issues, documenting findings and tracking actions. Visual management supports identification and escalation of problems. Supervisors coach teams in problem-solving methodologies. Cross-functional collaboration begins for complex issues.",
-    "Problem-solving is embedded into daily management systems with clear escalation protocols. Teams link issues to key performance indicators and monitor resolution progress. Leaders model A3 thinking and systematic countermeasure development. Knowledge sharing and standard work updates result from problem-solving outcomes. Continuous learning accelerates improvement cycles.",
-    "Problem-solving is a cultural norm, with cross-functional teams collaborating continuously to anticipate and resolve systemic issues. Advanced analytical tools and data-driven methods are routinely used. Teams proactively identify risks and implement preventative measures. Lessons learned are systematically shared organization-wide. Problem-solving drives innovation and operational excellence."
-  ]
-},
-
-// 11. Team Engagement in Improvement — Logistics & Supply Chain
-{
-  dimensionName: "Team Engagement in Improvement",
-  sectorName: "Logistics",
-  levels: [
-    "Team involvement in Lean or improvement activities is minimal, with limited awareness or opportunity to participate. Improvement efforts tend to be led by management without frontline input. Employees may feel disengaged or skeptical about Lean initiatives. Communication about Lean is often one-way and does not encourage participation. There is little sense of ownership at the team level.",
-    "Some teams participate in isolated Kaizen events or improvement meetings but engagement is inconsistent. Team members may contribute ideas but often lack support to implement them. Awareness of Lean’s benefits grows but is not widespread. Leadership involvement varies by department or shift. Collaboration remains limited.",
-    "Teams regularly engage in improvement activities, including Kaizen events and daily problem-solving meetings. Members take ownership of small-scale improvements and share successes. Cross-functional collaboration increases, with teams beginning to mentor others. Engagement is fostered through recognition and coaching. A culture of continuous learning starts to emerge.",
-    "Teams become self-directed in managing improvement projects and share best practices across units. Engagement is high and spans all roles, with employees actively seeking opportunities to optimize workflows. Cross-department initiatives are common, breaking down silos. Coaching and peer support sustain momentum. Teams take pride in contributing to organizational goals.",
-    "Teams drive innovation throughout the supply chain, proactively identifying improvement opportunities and disseminating successful practices organization-wide. Engagement includes participation in strategic initiatives and external benchmarking. Recognition programs and leadership coaching reinforce sustained involvement. Continuous improvement is intrinsic to team culture. Teams are seen as key contributors to competitive advantage."
-  ]
-},
-
-// 12. Value Stream Mapping — Logistics & Supply Chain
-{
-  dimensionName: "Value Stream Mapping",
-  sectorName: "Logistics",
-  levels: [
-    "There is little understanding or documentation of end-to-end material flow or logistics processes. Bottlenecks and waste often go unnoticed or unmanaged. Improvement efforts focus on isolated tasks rather than overall flow. Lack of process visibility limits problem-solving and coordination. Value streams are siloed and disconnected.",
-    "Some departments begin to map parts of their processes, typically within warehouses or transportation routes. Maps may be outdated or incomplete, with limited frontline involvement. Value stream concepts are introduced but not consistently applied. Waste and delays are identified sporadically. Coordination across functions remains limited.",
-    "Value stream mapping is used regularly to visualize and analyze logistics flows, involving cross-functional teams including frontline staff. Maps highlight waste, delays, and bottlenecks, guiding targeted improvements. Teams begin to align metrics and goals with flow efficiency. Mapping exercises become part of standard improvement activities. Awareness of end-to-end process impact increases.",
-    "Comprehensive, dynamic value stream maps are maintained and updated across all supply chain functions. Data-driven insights inform redesigns to optimize flow and reduce waste. Cross-functional collaboration is strong, with shared accountability for value delivery. Maps integrate supplier and customer touchpoints where applicable. Continuous improvement leverages mapping outputs.",
-    "Value stream maps are fully integrated with real-time data systems, supporting predictive analytics and seamless coordination. Logistics processes operate as a synchronized, end-to-end system delivering maximal customer value. Cross-organizational collaboration extends mapping beyond internal boundaries to suppliers and partners. Continuous redesign and innovation are driven by value stream insights. The organization benchmarks and shares best practices externally."
-  ]
-},
-
-// 13. Process Flow Efficiency — Logistics & Supply Chain
-{
-  dimensionName: "Process Flow Efficiency",
-  sectorName: "Logistics",
-  levels: [
-    "Material and information flow in logistics is erratic and uncoordinated, leading to frequent delays, redundancies, and rework. Bottlenecks cause shipping delays and stock imbalances. Processes are reactive, with little emphasis on flow or timing. Cross-department communication is weak. Operational inefficiencies negatively impact customer satisfaction.",
-    "Targeted efforts focus on streamlining individual functions such as warehouse picking or route scheduling. Communication between some departments improves, reducing waiting times and unnecessary handoffs. Basic flow improvements are introduced but remain isolated. Workflow standardization is limited. Operators begin to recognize flow issues but lack tools for systemic improvement.",
-    "Logistics processes are increasingly streamlined with smoother transitions between functions. Pull systems and basic Heijunka principles are applied to level workloads and reduce bottlenecks. Standard work supports consistent flow, and visual management highlights abnormalities. Cross-functional teams collaborate to improve end-to-end processes. Customer impact is considered in flow redesign.",
-    "Process flow is integrated across the entire supply chain, from procurement through delivery. Advanced scheduling and resource leveling reduce variability and waiting times. Real-time tracking supports rapid response to disruptions. Continuous flow is maintained through coordinated planning and execution. Flow efficiency is a key performance metric at all levels.",
-    "Near-perfect process flow is sustained using predictive scheduling, automation, and dynamic resource allocation. Processes adapt in real-time to demand fluctuations and supply variability. Cross-company collaboration optimizes end-to-end supply chain flow. Innovations such as autonomous material handling and AI-driven logistics are leveraged. Process flow excellence drives competitive differentiation."
-  ]
-},
-
-// 14. Standard Work / SOPs — Logistics & Supply Chain
-{
-  dimensionName: "Standard Work / SOPs",
-  sectorName: "Logistics",
-  levels: [
-    "Logistics tasks lack standardized procedures, resulting in variability and errors. Work instructions are often missing, outdated, or ignored. Training is informal, and practices differ widely across teams and shifts. Quality and safety are impacted by inconsistent execution. Documentation discipline is low.",
-    "Some standard operating procedures (SOPs) exist but are inconsistently used and poorly maintained. Frontline staff may be aware of some protocols but do not consistently follow them. Updates to SOPs are infrequent and unstructured. Training on SOPs is limited. Variation persists.",
-    "Documented SOPs cover key logistics processes and are posted or accessible at workstations. Teams follow these procedures regularly, and updates reflect continuous improvements. Training aligns with current standards. Compliance is monitored but may lack rigor. Frontline staff contribute to SOP revisions.",
-    "SOPs are comprehensive, regularly reviewed, and embedded into daily work with visual aids and timing standards. Audits and coaching reinforce adherence. Deviations are systematically investigated and corrected. SOPs integrate safety, quality, and efficiency considerations. Continuous improvement is linked to SOP updates.",
-    "Standard work is dynamic, continuously improved based on real-time feedback and analytics. Digital tools support instant access and updates to SOPs. Training and retraining are rapid and integrated into workflows. SOPs extend to suppliers and partners to ensure consistency across the value stream. Best practices are shared and benchmarked externally."
-  ]
-},
-
-// 15. Visual Management — Logistics & Supply Chain
-{
-  dimensionName: "Visual Management",
-  sectorName: "Logistics",
-  levels: [
-    "Visual cues and displays are minimal or absent in logistics operations. Operators rely on verbal instructions and memory, leading to confusion and errors. Performance data is not visible or is outdated. Problems are often detected too late. Visual management is not part of the work culture.",
-    "Basic visual controls such as signage, labels, or safety posters appear sporadically. Some work areas display hand-written charts or metrics but are often neglected. Visuals are not integrated with workflows or improvement processes. Operators seldom use visual information to guide work. The impact on performance is limited.",
-    "Visual management boards are established to display key performance indicators and daily goals. Color-coded alerts and problem escalation tools begin to be used. Operators reference visuals during meetings and shift changes. Visual tools support early detection and resolution of abnormalities. Teams take ownership of maintaining visuals.",
-    "Visual management is standardized across logistics operations, integrating real-time dashboards and digital displays. Visual controls guide workflow, inventory levels, and quality monitoring. Leaders use visual data to coach teams and support decision-making. Visual tools facilitate rapid escalation of issues and problem-solving. Visual management is a key enabler of continuous improvement.",
-    "Visual management is fully digital, interactive, and accessible organization-wide. Data flows automatically to displays from logistics execution and ERP systems. Visuals support predictive decision-making and strategic alignment. Visitors and new employees can instantly understand current status and priorities. Visual management drives transparency, accountability, and operational excellence."
-  ]
-},
-
-// 16. 5S Implementation — Logistics & Supply Chain
-{
-  dimensionName: "5S Implementation",
-  sectorName: "Logistics",
-  levels: [
-    "Workspaces in warehouses and transport hubs are cluttered and disorganized, causing inefficiencies and safety hazards. Tools and materials lack designated locations, leading to wasted time searching or replacing items. Cleanliness and order are inconsistent across shifts and teams. There is little awareness of 5S principles. Improvement efforts are sporadic and unstructured.",
-    "Basic 5S activities like sorting and labeling begin in some areas but lack sustainability. Red-tag events occur irregularly with limited follow-up. Visual aids such as posters are displayed but adherence varies. Teams start recognizing the benefits of organization but do not embed it into daily routines. Audits and accountability are minimal.",
-    "5S standards are documented and practiced regularly in most logistics zones. Work areas have clear tool and material placements, and visual controls guide organization. Teams conduct daily cleanups and resets, improving safety and efficiency. Audits begin to track compliance and highlight improvement opportunities. Engagement grows across shifts.",
-    "5S is sustained through formal audits, metrics, and team ownership across warehouses and transportation areas. Continuous improvements focus on ergonomics, waste elimination, and workflow optimization. Visual management integrates 5S status with performance boards. Training reinforces 5S as standard practice. The culture embraces workplace discipline and order.",
-    "The logistics operation exemplifies 5S excellence, benchmarking against best-in-class facilities. Innovation in workplace organization supports rapid adjustments and safety improvements. Digital tools aid sustainment and monitoring of 5S compliance. Teams proactively identify and solve 5S-related challenges. The workplace environment reflects and reinforces Lean culture and pride."
-  ]
-},
-
-// 17. Kanban/Pull Systems — Logistics & Supply Chain
-{
-  dimensionName: "Kanban/Pull Systems",
-  sectorName: "Logistics",
-  levels: [
-    "Inventory management is largely manual and reactive, causing frequent shortages or overstocking. There are no formal pull systems or signals to trigger replenishment. Communication between warehouses and procurement is limited. Stockouts and excess inventory cause inefficiencies and customer dissatisfaction. Waste due to poor material flow is common.",
-    "Simple pull systems like Kanban cards or reorder points are implemented in isolated areas. Replenishment is somewhat more predictable but still relies heavily on manual tracking. Communication improves but is inconsistent, causing delays in responding to stock needs. Staff begin recognizing the value of pull-based inventory control but lack full adoption. Systems are not yet integrated.",
-    "Kanban or pull systems are established across multiple logistics functions to better align inventory with demand. Teams monitor inventory levels visually and respond proactively to replenishment signals. Communication between procurement, warehousing, and transport improves. Pull systems reduce waste and buffer stock. Teams are trained in pull principles.",
-    "Pull systems are integrated across the entire supply chain, connecting suppliers, warehouses, and distribution centers. Digital Kanban systems support real-time tracking and automated replenishment. Inventory carrying costs decrease as stock levels align closely with actual consumption. Communication is seamless, enabling rapid response to demand changes. Pull systems support just-in-time delivery.",
-    "Pull systems are optimized with predictive analytics and automation, ensuring precise, just-in-time delivery of materials and goods. Integration with supplier and customer systems enables end-to-end visibility and flow synchronization. Autonomous material handling and replenishment technologies are deployed. Continuous improvement teams monitor and refine pull processes. Inventory levels are minimized without compromising service."
-  ]
-},
-
-// 18. Quick Changeover (SMED) — Logistics & Supply Chain
-{
-  dimensionName: "Quick Changeover (SMED)",
-  sectorName: "Logistics",
-  levels: [
-    "Changeovers for equipment, loading docks, or transport scheduling are lengthy and unpredictable, causing downtime and delays. Procedures are informal or undocumented. Delays disrupt workflows and reduce capacity utilization. Employees are reactive to changeover problems. No formal methods exist to reduce setup times.",
-    "Basic SMED principles are introduced, separating internal and external setup tasks. Checklists and visual aids support standardization. Some improvements reduce changeover times in pilot areas. Staff awareness increases but practices are not yet widespread or consistent. Changeover variability remains an issue.",
-    "Standardized changeover procedures are documented and followed in key logistics processes. Visual controls and training support consistent application. Changeover times decrease measurably, improving throughput and scheduling reliability. Feedback mechanisms encourage continuous improvement. Teams actively participate in refining procedures.",
-    "Changeover processes are audited regularly and continuously improved based on operator input and data analysis. Simulation training helps prepare staff for rapid changeovers. Improvements extend across multiple sites and functions. Changeovers are synchronized with demand fluctuations to optimize capacity. Safety and quality remain paramount.",
-    "Rapid, error-free changeovers are achieved consistently, maximizing equipment and facility utilization. Advanced technologies and automation support swift transitions. Changeover performance is benchmarked externally and drives competitive advantage. Continuous innovation sustains rapid adaptability. Changeover excellence enables high responsiveness to customer needs."
-  ]
-},
-
-// 19. Error-Proofing (Poka-Yoke) — Logistics & Supply Chain
-{
-  dimensionName: "Error-Proofing (Poka-Yoke)",
-  sectorName: "Logistics",
-  levels: [
-    "Errors in order picking, labeling, or documentation are frequent and detected late, causing rework and customer dissatisfaction. No formal error-proofing systems are in place. Quality checks rely mainly on inspection rather than prevention. Staff may be blamed for errors. Processes are vulnerable to human mistakes.",
-    "Basic error-proofing measures such as checklists, labels, or simple visual cues are introduced in some areas. Operators rely on reminders rather than physical mistake-proofing devices. Training raises awareness of common errors. Quality escapes remain high. Error-proofing is discussed during improvement events but not widely implemented.",
-    "Error-proofing devices and processes are integrated into critical logistics tasks such as barcode scanning and automated verification. Teams identify error-prone steps during Kaizen events and implement poka-yoke solutions. Operators are trained to recognize and address potential mistakes proactively. Error rates begin to decline. Error-proofing becomes part of continuous improvement discussions.",
-    "Error-proofing is embedded in process design and standard work, supported by audits and monitoring. Advanced technologies like RFID and automated alerts reduce errors further. Operators contribute to designing and maintaining poka-yoke solutions. Quality escapes are rare in error-proofed processes. Continuous feedback ensures systems remain effective.",
-    "Error-proofing is fully integrated with real-time data analytics and AI systems predicting and preventing errors before they occur. New processes and technologies are evaluated for mistake-proofing before deployment. Teams innovate poka-yoke solutions collaboratively across functions and suppliers. Quality is built into logistics operations, not inspected afterward. The culture prioritizes prevention."
-  ]
-},
-
-// 20. Process Transparency — Logistics & Supply Chain
-{
-  dimensionName: "Process Transparency",
-  sectorName: "Logistics",
-  levels: [
-    "Logistics processes are largely opaque, leading to confusion and inefficiencies. Operators and managers lack clear visibility into workflow status, inventory levels, and order progress. Issues are discovered late, resulting in reactive firefighting. Process documentation and communication are limited. Decision-making is often based on incomplete or outdated information.",
-    "Some workflow charts, process maps, and visual boards are introduced to increase clarity. Transparency is limited to certain functions or shifts. Updates are often manual and delayed. Frontline staff have partial insight into process status but lack comprehensive understanding. Communication gaps persist between departments.",
-    "Process transparency improves with accessible, up-to-date workflow status displays and performance dashboards. Teams regularly review process data in meetings to identify bottlenecks or deviations. Cross-functional visibility increases, enabling better coordination. Technology supports more timely updates. Process clarity supports proactive management.",
-    "Real-time process status updates are available to all relevant staff and leadership. Continuous monitoring highlights abnormalities promptly. Integrated digital systems link warehouse management, transportation, and inventory data. Transparency fosters accountability and collaborative problem-solving. Data-driven decision-making is routine.",
-    "Full visibility across all logistics operations and external partners is achieved through advanced digital platforms. Transparency supports predictive analytics and strategic planning. Open communication channels ensure issues are resolved quickly and collaboratively. Process data is shared with suppliers and customers, enabling seamless coordination. Transparency is a competitive advantage and driver of continuous improvement."
-  ]
-},
-
-// 21. Quality-at-Source — Logistics & Supply Chain
-{
-  dimensionName: "Quality-at-Source",
-  sectorName: "Logistics",
-  levels: [
-    "Quality issues such as incorrect shipments, damaged goods, or documentation errors are often detected late, usually after customers report problems. There is minimal frontline involvement in identifying or correcting defects. Quality checks rely heavily on end-of-process inspections, leading to rework and delays. Responsibility for quality is seen as the QA department’s job, not an operator’s. Preventative actions are rare.",
-    "Frontline staff begin to be trained and encouraged to identify and correct defects immediately during their work. Basic quality checks become part of standard tasks, such as verifying shipment accuracy before dispatch. Root cause analysis is occasionally performed but not systematically. Teams are more aware of their role in quality but lack formal tools or processes. Early detection of issues is improving but inconsistent.",
-    "Quality-at-source practices are embedded into daily work, with operators empowered to stop processes and correct errors immediately. Quality checks are integrated into standard operating procedures, supported by visual controls and error-proofing devices. Teams regularly use root cause analysis to prevent recurrence. Continuous feedback loops enable timely quality improvements. Quality ownership spreads throughout logistics functions.",
-    "Real-time monitoring and alerts support quality control at every process step. Frontline staff actively participate in quality improvement teams and audits. Advanced data analytics identify quality trends and focus improvement efforts. Continuous quality feedback is part of team huddles and management reviews. The culture emphasizes proactive prevention and accountability for quality.",
-    "Quality is proactively ensured through predictive analytics, AI-based monitoring, and embedded safeguards. Every logistics team member prioritizes quality at the source, with empowerment to innovate solutions. Integrated digital systems provide immediate quality insights supporting decision-making. Quality metrics are a core part of performance evaluations and strategic planning. The organization is recognized for excellence in logistics quality management."
-  ]
-},
-
-// 22. Level Loading / Heijunka — Logistics & Supply Chain
-{
-  dimensionName: "Level Loading / Heijunka",
-  sectorName: "Logistics",
-  levels: [
-    "Workloads and shipment schedules are uneven and unpredictable, leading to peaks and troughs in labor demand. This variability causes bottlenecks, overtimes, or idle times, impacting service reliability. Scheduling is reactive with little coordination between departments. Capacity constraints are frequently unmanaged. Employees experience burnout or downtime.",
-    "Basic leveling techniques are applied within certain teams or shifts to smooth workloads. Departments begin to coordinate schedules to reduce extreme fluctuations. Some planning considers demand patterns but lacks granularity or real-time adjustments. Variability remains a challenge. Communication about workload balancing is inconsistent.",
-    "Level loading is actively managed across multiple logistics functions, balancing resources and workflows to reduce bottlenecks. Production and shipment schedules are smoothed using Heijunka principles. Coordination between warehousing, transport, and procurement improves. Real-time data helps identify workload imbalances. Teams adjust plans proactively.",
-    "System-wide leveling integrates capacity planning, resource allocation, and customer demand management. Predictive analytics support demand forecasting and workload smoothing. Flexibility in staffing and equipment deployment enhances responsiveness. Variability is minimized across the supply chain, improving flow and employee experience. Level loading is a key operational focus.",
-    "Level loading is dynamic and predictive, enabled by AI-driven scheduling and autonomous resource management. Workloads are continuously balanced across sites, shifts, and functions in real-time. Employees experience steady, manageable workloads, enhancing morale and performance. Demand-capacity synchronization extends through supplier and customer networks. Level loading excellence supports superior service delivery and operational efficiency."
-  ]
-},
-
-// 23. TPM (Total Productive Maintenance) — Logistics & Supply Chain
-{
-  dimensionName: "TPM (Total Productive Maintenance)",
-  sectorName: "Logistics",
-  levels: [
-    "Equipment breakdowns, vehicle downtime, and maintenance are reactive and unplanned, causing frequent disruptions. Maintenance is informal and often delayed. Operators lack ownership or involvement in upkeep. Downtime data is not tracked or analyzed. Equipment reliability negatively impacts operations and safety.",
-    "Planned maintenance schedules are introduced but are inconsistently followed. Operators perform basic equipment checks. Some downtime tracking begins. Maintenance teams conduct routine inspections but lack proactive strategies. Spare parts availability is irregular. Collaboration between operators and technicians is limited.",
-    "TPM pillars such as autonomous maintenance and planned maintenance are implemented. Operators take responsibility for daily equipment checks and minor upkeep. Downtime causes are logged and analyzed. Preventive maintenance reduces breakdown frequency. Collaboration between maintenance and operations improves. Equipment reliability increases.",
-    "TPM is fully integrated into logistics operations with cross-functional teams driving continuous improvement in maintenance. Overall Equipment Effectiveness (OEE) is tracked and reviewed regularly. Maintenance is predictive, based on usage data and condition monitoring. Operators and technicians work closely to optimize equipment performance. Root causes of failures are systematically addressed.",
-    "TPM is a cultural norm with maintenance embedded in all levels of logistics operations. Predictive maintenance uses IoT sensors and data analytics to anticipate failures before they occur. Equipment design incorporates maintainability features. Continuous training ensures high capability in maintenance practices. Equipment reliability supports near-zero downtime and operational excellence."
-  ]
-},
-
-// 24. End-to-End Value Stream Integration — Logistics & Supply Chain
-{
-  dimensionName: "End-to-End Value Stream Integration",
-  sectorName: "Logistics",
-  levels: [
-    "Logistics departments work in silos with little coordination or shared goals. Poor communication leads to delays, redundancies, and errors in handoffs between functions. Supply chain visibility is limited. Accountability is fragmented. Customer service suffers from disjointed processes.",
-    "Some efforts are made to improve coordination between key functions such as warehousing and transportation. Cross-functional meetings and basic process handoffs begin. Shared KPIs are introduced but not fully aligned. Integration is limited to internal departments. External collaboration is minimal.",
-    "Workflows, metrics, and improvement goals are aligned across logistics functions. Cross-functional teams collaborate regularly to improve end-to-end flow and reduce waste. Information systems support data sharing internally. Accountability for value delivery is shared. Customer satisfaction metrics influence operations.",
-    "Logistics processes are aligned with suppliers and customers, creating a coordinated value stream. Integrated planning and execution improve responsiveness and reduce delays. Performance metrics cascade through the entire supply chain. Continuous improvement initiatives are cross-organizational. Collaboration fosters innovation.",
-    "End-to-end value stream integration extends beyond the company to include suppliers, partners, and customers in a seamless ecosystem. Real-time data sharing and synchronized processes optimize flow and service delivery. Joint improvement projects drive innovation and value creation. The supply chain operates as a unified, customer-centric network. The organization is a benchmark for value stream integration."
-  ]
-},
-
-// 25. Waste Identification and Elimination — Logistics & Supply Chain
-{
-  dimensionName: "Waste Identification and Elimination",
-  sectorName: "Logistics",
-  levels: [
-    "Waste such as excess motion, waiting, overprocessing, and defects is largely unmanaged and unrecognized. Teams may be unaware of waste types or their impact on logistics costs and service. Improvement efforts focus on firefighting rather than waste reduction. Processes are inefficient, leading to delays and increased expenses. Waste reduction is not part of the culture.",
-    "Staff begin identifying common wastes during Kaizen events or targeted improvement projects. Some efforts to reduce motion, waiting, or excess inventory are initiated but not sustained. Awareness of waste types grows but tools and methods are inconsistently applied. Results are uneven, and waste often recurs. Cultural resistance to change persists.",
-    "Waste elimination becomes systematic, supported by Lean tools such as value stream mapping and 5S. Cross-functional teams regularly analyze processes to detect and reduce waste. Data supports identification and prioritization of waste reduction initiatives. Teams celebrate waste reduction successes. Continuous improvement cycles target waste elimination.",
-    "Waste reduction is embedded in daily management systems with clear accountability. Metrics track waste elimination progress, and improvements are sustained. Advanced techniques like root cause analysis and poka-yoke target persistent wastes. Waste identification includes environmental and energy considerations. The culture prioritizes efficiency and resource optimization.",
-    "Waste elimination is a strategic priority driving operational excellence and sustainability. Innovative methods continuously identify and prevent waste before it impacts operations. The organization benchmarks and shares best practices in waste reduction. Lean culture ensures all employees proactively detect and address waste. Waste minimization contributes to cost leadership and environmental stewardship."
-  ]
-},
-
-// 26. Handoffs and Queue Reduction — Logistics & Supply Chain
-{
-  dimensionName: "Handoffs and Queue Reduction",
-  sectorName: "Logistics",
-  levels: [
-    "Handoffs between warehouses, transport teams, and other departments are frequent, inconsistent, and error-prone, causing delays and information loss. There are no standardized handoff protocols, and queues for loading, unloading, or processing are common. Communication is fragmented, leading to confusion and inefficiency. Delays in one area cascade through the supply chain. Customer service suffers due to unpredictability.",
-    "Structured handoff tools and communication standards are introduced in some areas, reducing errors. Teams begin to coordinate schedules to minimize queues, but efforts are patchy and lack broad application. Handoffs improve within departments but remain problematic across functions. Feedback about handoff quality is inconsistent. Queue lengths and wait times are measured sporadically.",
-    "Standardized handoff protocols are implemented across major logistics functions. Communication during transitions is clearer and more reliable, supported by checklists and digital tools. Scheduling and process flow coordination reduce queues and waiting times significantly. Teams monitor handoff metrics closely and address issues proactively. Cross-functional collaboration improves continuity.",
-    "Handoffs are minimized and seamlessly managed with real-time coordination between warehouses, transport, and suppliers. Queue reduction strategies are integrated into operational planning and performance reviews. Teams use predictive analytics to anticipate and resolve bottlenecks before they occur. Quality and timeliness of handoffs are continuously improved. Customer satisfaction metrics reflect improved flow.",
-    "Handoffs and queues are nearly eliminated through end-to-end process integration and automation. Real-time digital systems synchronize activities across the entire supply chain, ensuring smooth transitions. Continuous monitoring and rapid response prevent bottlenecks. The organization collaborates with partners to optimize handoffs beyond internal operations. Handoff excellence supports superior service and agility."
-  ]
-},
-
-// 27. Documentation Discipline — Logistics & Supply Chain
-{
-  dimensionName: "Documentation Discipline",
-  sectorName: "Logistics",
-  levels: [
-    "Documentation of shipments, inventory, and process steps is incomplete, inconsistent, or delayed. Paper-based records or informal notes cause errors and inefficiencies. Lack of standardized forms or procedures hampers accuracy and traceability. Compliance risks increase due to poor documentation. Staff rely heavily on memory or verbal instructions.",
-    "Documentation standards are introduced and enforced through basic training and audits. Digital record-keeping may start in some areas but is inconsistent. Accuracy and timeliness improve, but gaps remain. Frontline accountability for documentation grows slowly. Data retrieval and sharing are limited.",
-    "Documentation is disciplined and standardized across logistics functions. Electronic systems support real-time data entry and retrieval. Staff are trained and accountable for accurate, timely documentation. Audits and feedback loops reinforce compliance. Documentation supports operational control and customer requirements.",
-    "Documentation is fully integrated with digital workflows and ERP systems. Real-time visibility into shipment status, inventory, and process compliance is available. Errors and omissions are rare due to validation and automation. Continuous monitoring ensures data quality and accessibility. Documentation supports decision-making and regulatory compliance.",
-    "Documentation is seamless, automated, and error-proofed across all logistics processes. Advanced digital tools integrate documentation with operational systems and analytics. Data accuracy is near 100%, supporting real-time decision-making and traceability. The organization continuously improves documentation practices and shares best practices. Documentation excellence enhances transparency and customer trust."
-  ]
-},
-
-// 28. Digitization of Workflows — Logistics & Supply Chain
-{
-  dimensionName: "Digitization of Workflows",
-  sectorName: "Logistics",
-  levels: [
-    "Workflows are mostly manual or paper-based, leading to delays, errors, and lack of visibility. Processes rely on informal communication and physical paperwork. Digital tools are limited or fragmented. Data collection and sharing are inefficient. Manual tasks increase operational risks and costs.",
-    "Selective digitization begins in certain logistics areas, such as barcode scanning or inventory tracking. Basic digital tools support specific functions but are not integrated. Staff receive some training on digital processes. Workflow digitization is project-based and inconsistent. Data silos persist.",
-    "Digital workflows are implemented more broadly, connecting key logistics functions such as order processing, warehousing, and transportation. Systems integrate to enable better data sharing and process automation. Training supports widespread adoption. Digital tools improve accuracy, speed, and traceability. Workflow standardization increases.",
-    "End-to-end digitization connects workflows across the entire supply chain, supported by comprehensive IT infrastructure. Real-time data capture and analysis enhance responsiveness and efficiency. Mobile access and user-friendly interfaces support frontline operators. Digital processes are continuously refined through feedback and improvement cycles. Integration with supplier and customer systems improves collaboration.",
-    "Fully integrated, intelligent digital workflows automate logistics operations end-to-end. AI and machine learning optimize processes dynamically. Workflow digitization supports predictive analytics, autonomous decision-making, and real-time adjustment to demand changes. The organization leads in digital innovation and shares expertise externally. Digitization drives operational excellence and competitive advantage."
-  ]
-},
-
-// 29. Lean Integrated into Corporate Strategy — Logistics & Supply Chain
-{
-  dimensionName: "Lean Integrated into Corporate Strategy",
-  sectorName: "Logistics",
-  levels: [
-    "Lean principles are largely absent from corporate strategy and planning. Improvement efforts are fragmented, reactive, and disconnected from organizational goals. Leadership does not articulate a vision for Lean transformation. Resource allocation for Lean initiatives is minimal or ad hoc. Lean is perceived as a short-term program or cost-cutting tool.",
-    "Lean is recognized as a potential improvement approach, with isolated pilot projects aligned to specific operational issues. Some strategic discussions include Lean terminology, but commitment is limited. Resource planning begins to consider Lean initiatives selectively. Leadership awareness grows but lacks full integration. Lean remains a tactical rather than strategic focus.",
-    "Lean is formally integrated into corporate strategy, with clear goals linked to operational performance and customer satisfaction. Leadership communicates Lean’s role in achieving business objectives. Resources are allocated systematically to support Lean deployment across logistics functions. Strategic reviews include Lean metrics. Alignment between Lean initiatives and corporate priorities improves.",
-    "Lean thinking is embedded deeply in strategy development and execution. Cross-functional collaboration supports holistic Lean transformation across the supply chain. Lean goals influence capital investments, technology adoption, and supplier management. Leadership regularly reviews Lean progress and adjusts plans dynamically. Lean culture supports strategic agility.",
-    "Lean principles shape the organization’s long-term vision and competitive strategy. Lean transformation drives innovation, customer value creation, and sustainable growth. The company benchmarks against industry leaders and continuously evolves its Lean approach. Lean is a core component of corporate identity and governance. Strategy deployment is agile, inclusive, and data-driven."
-  ]
-},
-
-// 30. Hoshin Kanri or Strategy Deployment — Logistics & Supply Chain
-{
-  dimensionName: "Hoshin Kanri or Strategy Deployment",
-  sectorName: "Logistics",
-  levels: [
-    "Strategy deployment is informal or absent, resulting in inconsistent goal alignment and disconnected improvement efforts. Communication of strategic priorities is top-down and unclear. Departments operate independently with little coordination. Lean objectives, if present, are not cascaded systematically. Accountability for strategy execution is weak.",
-    "Basic strategy deployment tools are introduced, and some efforts are made to cascade goals to departments. Strategy communication improves but lacks clarity or regularity. Improvement projects begin to align with organizational priorities. Departments start sharing information but coordination remains limited. Feedback mechanisms are inconsistent.",
-    "Structured strategy deployment processes, such as Hoshin Kanri, are implemented to align goals across functions. Regular reviews ensure progress tracking and accountability. Cross-functional teams participate in strategy execution. Lean objectives are cascaded through performance management systems. Communication and collaboration improve.",
-    "Strategy deployment is dynamic and data-driven, with real-time monitoring of key metrics. Cross-functional leadership engagement and feedback loops enable adaptive planning. Improvement initiatives are aligned with strategic priorities and continuously refined. Strategy is communicated clearly and consistently throughout the organization. Lean principles guide execution and governance.",
-    "Strategy deployment is fully integrated, agile, and participatory at all organizational levels. Continuous alignment, adjustment, and accountability drive Lean transformation success. Digital platforms support transparent strategy communication and progress tracking. The organization demonstrates strategic agility and innovation. Lean strategy deployment is a source of competitive advantage."
-  ]
-},
-
-// 31. Supplier Collaboration — Logistics & Supply Chain
-{
-  dimensionName: "Supplier Collaboration",
-  sectorName: "Logistics",
-  levels: [
-    "Supplier interactions are primarily transactional, focused on purchase orders and deliveries with little engagement in improvement efforts. Communication is limited, and supplier issues like delays or quality problems are handled reactively. There is no structured process for joint problem-solving or Lean integration. Supplier performance variability disrupts flow regularly. Partnerships lack transparency and trust.",
-    "Some basic supplier scorecards and performance tracking are in place. Suppliers receive forecasts and participate in occasional meetings. Collaboration on quality or delivery issues is limited and mostly reactive. Lean concepts are introduced to a few key suppliers. Data sharing is informal and not timely. Supplier variability still affects operations significantly.",
-    "Regular reviews align supplier expectations and performance goals. Joint problem-solving initiatives begin, focusing on delivery reliability and quality improvements. Suppliers adopt some Lean practices, supported by shared metrics and collaboration tools. Communication channels are more open, enabling better coordination. Continuous improvement efforts include supplier input.",
-    "Strong partnerships exist with key suppliers, including joint planning and Lean integration. Suppliers participate actively in improvement events and innovation initiatives. Data sharing is real-time and comprehensive. Collaborative governance ensures alignment of objectives and rapid resolution of issues. Suppliers are seen as extensions of the logistics Lean system.",
-    "Supplier collaboration is strategic and embedded in overall Lean supply chain management. Suppliers and logistics teams co-develop processes, technologies, and innovations that drive mutual benefits. Digital integration enables seamless real-time data exchange. Continuous joint improvement programs enhance supply chain resilience and performance. The organization leads in fostering Lean supplier networks."
-  ]
-},
-
-// 32. Customer Focus — Logistics & Supply Chain
-{
-  dimensionName: "Customer Focus",
-  sectorName: "Logistics",
-  levels: [
-    "Logistics teams have limited awareness of customer needs or expectations. Work is focused on internal processes rather than customer outcomes. Customer feedback is rare or handled only by sales or customer service departments. Delivery errors and delays occur frequently without root cause investigation. Customer satisfaction is not tracked or prioritized.",
-    "Customer data such as complaints and delivery metrics are shared occasionally with logistics teams. Teams begin to understand the impact of their work on customer satisfaction but lack systematic processes to act on feedback. Improvements focus mainly on fixing visible issues. Customer-centric thinking is growing but not embedded. Communication between logistics and customer service is inconsistent.",
-    "Customer KPIs such as on-time delivery and order accuracy are tracked regularly by logistics teams. Root cause analysis of customer complaints is integrated into problem-solving efforts. Teams participate in voice-of-customer reviews and use feedback to prioritize improvements. Customer focus is a recognized goal across logistics functions. Cross-functional collaboration with customer-facing departments improves.",
-    "Logistics operations proactively align with customer priorities and expectations. Customer satisfaction metrics influence daily management and strategic decisions. Teams participate in product launches and service design to incorporate logistics feasibility and customer impact. Continuous improvement efforts target customer value creation. Customer focus is embedded in the culture.",
-    "Customer focus is deeply ingrained and drives all logistics strategies and operations. The organization uses advanced analytics and direct customer engagement to anticipate and exceed expectations. Logistics teams innovate solutions that enhance customer experience and loyalty. Customer feedback cycles are rapid and embedded in continuous improvement. The company is recognized for logistics excellence and customer-centricity."
-  ]
-},
-
-// 33. Performance Measurement and Metrics — Logistics & Supply Chain
-{
-  dimensionName: "Performance Measurement and Metrics",
-  sectorName: "Logistics",
-  levels: [
-    "Performance data is limited, outdated, or inconsistent, hindering effective management. Key logistics metrics such as delivery times, inventory accuracy, or equipment uptime are not systematically tracked. Decisions are often based on intuition or anecdotal information. Reporting is irregular and not transparent. Accountability for performance is weak.",
-    "Basic KPIs are defined and tracked in some areas, such as shipment punctuality or stock levels. Data collection is often manual or delayed. Some teams begin using performance data in meetings and problem-solving but analysis is superficial. Metrics focus on output rather than process quality or efficiency. Visibility of performance varies across functions.",
-    "A balanced set of logistics performance metrics is consistently tracked, including quality, delivery, cost, and safety indicators. Data collection is increasingly automated and timely. Teams use metrics to identify improvement opportunities and monitor project outcomes. Dashboards and visual management tools support regular performance reviews. Accountability is reinforced through targets and feedback.",
-    "Performance measurement is integrated across logistics functions with real-time data and advanced analytics. Metrics are linked to strategic goals and customer satisfaction. Teams proactively use data to anticipate issues and drive continuous improvement. Performance discussions occur regularly at all organizational levels. Metrics evolve to reflect process improvements and innovation.",
-    "Performance measurement is predictive, comprehensive, and fully embedded in decision-making processes. Advanced analytics, benchmarking, and AI support continuous refinement of metrics and targets. Performance data is transparent and drives accountability across the supply chain. The organization uses performance insights to lead industry standards and share best practices externally."
-  ]
-},
-
-// 34. Sustainability and Environmental Responsibility — Logistics & Supply Chain
-{
-  dimensionName: "Sustainability and Environmental Responsibility",
-  sectorName: "Logistics",
-  levels: [
-    "Environmental considerations are minimal or absent from logistics operations. Waste generation, energy use, and emissions are not tracked or managed. Sustainability is not part of the organizational agenda. Compliance with regulations is reactive rather than proactive. Employees have limited awareness of environmental impact.",
-    "Basic sustainability initiatives such as waste reduction programs or energy-saving measures are introduced in isolated areas. Some data on environmental impact is collected but not systematically analyzed. Awareness of sustainability grows slowly among leadership and staff. Compliance efforts focus on meeting legal requirements. Sustainability is not fully integrated into logistics processes.",
-    "Sustainability goals are incorporated into logistics planning and performance metrics. Initiatives focus on reducing carbon footprint, optimizing routes, and minimizing waste. Teams engage in continuous improvement projects with environmental benefits. Supplier sustainability practices are assessed and encouraged. Employee training includes environmental responsibility.",
-    "Environmental sustainability is a strategic priority, integrated into supply chain design and execution. Advanced technologies and data analytics optimize energy use, emissions, and material consumption. Collaboration with suppliers and customers supports shared sustainability goals. Continuous monitoring and reporting ensure progress and transparency. The organization fosters a culture of environmental stewardship.",
-    "Sustainability drives innovation and competitive advantage across logistics operations. The organization pioneers green logistics practices, including renewable energy use, electric fleets, and circular economy models. Sustainability metrics are fully integrated with financial and operational KPIs. Stakeholder engagement and reporting exceed industry standards. The company is recognized as a leader in sustainable supply chain management."
-  ]
-},
-
-// 35. Continuous Improvement Culture — Logistics & Supply Chain
-{
-  dimensionName: "Continuous Improvement Culture",
-  sectorName: "Logistics",
-  levels: [
-    "Continuous improvement (CI) efforts are sporadic, isolated, and often driven by external consultants or management mandates. Employees are generally passive participants. Improvement activities lack structure or follow-through. Successes are not widely shared or celebrated. Lean principles are poorly understood.",
-    "CI activities such as Kaizen events or suggestion programs begin to take root in some departments. Participation increases but remains uneven and often event-driven. Management supports improvement but struggles with sustaining momentum. Communication about CI is improving but lacks consistency. Employees start to see the value of improvement efforts.",
-    "CI is integrated into daily work, with teams regularly identifying, prioritizing, and implementing improvements. Structured problem-solving and Lean tools are widely used. Improvement projects link to performance metrics and strategic goals. Successes are communicated and recognized. Leadership actively coaches and supports CI.",
-    "A strong CI culture permeates the organization, with all employees empowered and accountable for improvement. CI is embedded in processes, training, and performance management. Cross-functional collaboration accelerates problem-solving and innovation. Continuous learning and adaptation are norms. The organization systematically captures and shares best practices.",
-    "CI is a core organizational competency and competitive advantage. The culture fosters experimentation, innovation, and rapid iteration. Improvement cycles are relentless, supported by advanced analytics and digital tools. The company leads its industry in Lean maturity and operational excellence. CI is woven into every aspect of logistics and business strategy."
-  ]
-},
-
-// 36. Visual Performance Management — Logistics & Supply Chain
-{
-  dimensionName: "Visual Performance Management",
-  sectorName: "Logistics",
-  levels: [
-    "Performance data is rarely displayed or accessible to frontline staff. Operators and supervisors lack visibility into key metrics such as shipment accuracy, inventory levels, or equipment uptime. Discussions on performance focus primarily on output rather than quality or process improvement. Visual tools like boards or dashboards are absent or underutilized. Performance management is largely reactive and inconsistent.",
-    "Some basic visual management tools, such as whiteboards or printed charts, are introduced in limited areas. Metrics like daily shipments or error rates are displayed but often outdated or incomplete. Frontline teams occasionally reference these visuals during meetings. Ownership of visual tools is unclear, leading to inconsistent maintenance and engagement. Improvements in performance visibility are incremental.",
-    "Visual management boards are regularly updated and widely used across logistics teams. Metrics align with operational and strategic goals, including quality, delivery, and safety indicators. Visual cues such as color-coding help quickly identify abnormalities and trigger problem-solving. Visual management is integrated into daily meetings and huddles. Teams take responsibility for maintaining accurate and meaningful visuals.",
-    "Digital visual performance management systems provide real-time data accessible to all relevant personnel. Visuals support proactive decision-making and continuous improvement initiatives. Leaders use visual data to coach teams and drive accountability. Metrics evolve dynamically based on business needs and improvement cycles. Visual management fosters transparency and collaboration across departments.",
-    "Visual performance management is fully integrated with enterprise systems, offering interactive, real-time dashboards across sites and functions. Predictive analytics inform decision-making and highlight potential issues before they impact operations. Visualization of strategy deployment cascades performance goals throughout the organization. Visual tools promote a culture of transparency, empowerment, and continuous learning. The organization benchmarks and shares best practices externally."
-  ]
-},
-
-// 37. Risk Management and Mitigation — Logistics & Supply Chain
-{
-  dimensionName: "Risk Management and Mitigation",
-  sectorName: "Logistics",
-  levels: [
-    "Risk identification and mitigation are informal and reactive. Logistics teams address problems as they occur, with limited foresight or contingency planning. Risks such as supply disruptions, equipment failures, or safety incidents are not systematically tracked. Communication about risks is sporadic. The organization is vulnerable to unexpected disruptions.",
-    "Basic risk registers and assessments are introduced in key areas. Some contingency plans exist but are limited in scope and application. Teams begin to recognize and communicate potential risks. Training on risk awareness is sporadic. Risk management activities are largely manual and inconsistent.",
-    "Structured risk management processes are implemented across logistics functions. Risks are regularly identified, assessed, and prioritized using formal tools. Mitigation plans are developed and monitored. Cross-functional teams collaborate to reduce exposure to common logistics risks. Incident data informs continuous improvement in risk practices.",
-    "Risk management is integrated into daily operations and strategic planning. Advanced analytics predict potential risks, enabling proactive mitigation. Training and communication foster a culture of risk awareness and responsibility. Lessons learned from incidents drive improvements. Risk management supports operational resilience.",
-    "Risk management is predictive, comprehensive, and embedded in all logistics processes. Real-time monitoring and AI-driven analytics anticipate disruptions and enable rapid response. Collaboration with suppliers and partners enhances supply chain resilience. The organization continuously improves risk frameworks and shares knowledge. Risk management is a competitive advantage."
-  ]
-},
-
-// 38. Employee Development and Career Pathways — Logistics & Supply Chain
-{
-  dimensionName: "Employee Development and Career Pathways",
-  sectorName: "Logistics",
-  levels: [
-    "Employee development is ad hoc with limited formal training or career planning. Growth opportunities are unclear, leading to low motivation and high turnover. Skills development focuses on immediate job tasks rather than long-term capability building. Supervisors rarely coach or mentor. Employee engagement in learning is minimal.",
-    "Basic training programs and some career pathways are introduced. Employees receive occasional coaching and skill development support. Awareness of career options grows, but progression processes lack structure. Training is primarily classroom-based with limited hands-on application. Engagement in development varies.",
-    "Structured development programs and clear career pathways exist for operators, supervisors, and managers. Training combines classroom, on-the-job coaching, and Lean skill development. Mentoring and performance feedback support growth. Employees are encouraged to participate in improvement projects as part of development. Retention improves.",
-    "Employee development is integrated with Lean culture and business objectives. Leadership development programs include Lean coaching and strategic thinking. Continuous learning is supported through formal and informal channels. Career progression aligns with skill mastery and contribution to improvement. Succession planning identifies and prepares future leaders.",
-    "Development and career pathways are proactive, personalized, and aligned with organizational strategy. Advanced training, certification, and leadership development programs are widely available. The organization fosters a learning culture that encourages innovation and growth at all levels. Employee development metrics inform workforce planning. The company is recognized as an employer of choice in logistics."
-  ]
-},
-
-// 39. Information Technology Integration — Logistics & Supply Chain
-{
-  dimensionName: "Information Technology Integration",
-  sectorName: "Logistics",
-  levels: [
-    "IT systems are fragmented, with limited integration between warehousing, transportation, and procurement functions. Data silos cause inefficiencies and errors. Manual data entry and paper-based processes prevail. IT support is reactive and uncoordinated. Visibility into operations is limited.",
-    "Basic IT systems such as Warehouse Management Systems (WMS) or Transportation Management Systems (TMS) are introduced in parts of the operation. Some integration exists but is limited in scope and reliability. Staff receive minimal training on IT tools. Data sharing between systems remains manual and inconsistent. IT initiatives are project-based.",
-    "IT systems are more broadly deployed and integrated across major logistics functions. Real-time data capture improves accuracy and decision-making. System training is comprehensive and supported by help resources. Data flows more seamlessly between systems, supporting end-to-end process visibility. IT supports continuous improvement initiatives.",
-    "Advanced IT integration connects logistics operations internally and with external partners. Cloud-based platforms, APIs, and digital dashboards provide real-time visibility and analytics. Systems support automation, workflow digitization, and predictive analytics. IT strategy aligns with business goals. Continuous IT improvement is embedded in governance.",
-    "IT is fully integrated, intelligent, and strategic, enabling autonomous logistics operations. Artificial intelligence, machine learning, and blockchain technologies support transparency, traceability, and optimization. Real-time collaboration with suppliers and customers is seamless. IT drives innovation and competitive advantage. The organization leads in digital logistics transformation."
-  ]
-},
-
-// 40. Cross-Functional Collaboration — Logistics & Supply Chain
-{
-  dimensionName: "Cross-Functional Collaboration",
-  sectorName: "Logistics",
-  levels: [
-    "Collaboration between logistics functions (warehousing, transportation, procurement) is limited and siloed. Departments work independently with minimal communication. Joint problem-solving is rare. Conflicts or misunderstandings between functions are common. Collaboration is seen as optional rather than necessary.",
-    "Some cross-functional meetings and improvement projects are initiated, often driven by management. Collaboration improves but is inconsistent and sometimes superficial. Communication channels develop slowly. Teams begin sharing data and coordinating schedules. Trust between functions is fragile.",
-    "Regular cross-functional teams collaborate on planning, problem-solving, and process improvements. Shared goals and metrics align efforts. Communication is open and constructive. Teams work together to resolve issues impacting multiple functions. Collaboration contributes to improved logistics performance.",
-    "Cross-functional collaboration is embedded in daily operations and strategic initiatives. Teams use joint problem-solving methods and continuous improvement processes. Communication is seamless, supported by digital platforms. Trust and mutual accountability are strong. Collaboration drives innovation and agility.",
-    "Collaboration spans internal departments, suppliers, and customers, forming integrated logistics networks. Cross-functional teams lead enterprise-wide improvement and innovation initiatives. Shared digital tools enable transparency and real-time coordination. Collaboration is a cultural norm and competitive advantage. The organization is recognized for partnership excellence."
-  ]
-},
-
-// 41. Knowledge Management and Best Practice Sharing — Logistics & Supply Chain
-{
-  dimensionName: "Knowledge Management and Best Practice Sharing",
-  sectorName: "Logistics",
-  levels: [
-    "Knowledge sharing is informal and sporadic, relying heavily on individual experience. Best practices are not documented or communicated consistently. Lessons learned from problems or improvements are rarely shared beyond immediate teams. Organizational memory is weak, leading to repeated mistakes and inefficiencies. Training is mostly reactive and inconsistent.",
-    "Some efforts to document and share best practices emerge, often in response to specific issues. Informal communities of practice or knowledge-sharing sessions begin to form. Communication channels are limited and not standardized. Lessons learned are shared within departments but seldom across the organization. Knowledge retention is partial.",
-    "Best practice repositories and structured knowledge management systems are established. Regular forums and workshops facilitate sharing of successes and lessons learned across logistics functions. Employees actively contribute and access knowledge resources. Knowledge transfer is incorporated into training and onboarding. Continuous improvement benefits from shared learning.",
-    "Knowledge management is integrated into business processes and supported by digital platforms. Cross-functional and cross-site knowledge sharing is routine. Best practices are benchmarked against industry standards and adapted. Leadership promotes a culture of continuous learning and open information exchange. Knowledge assets are protected and leveraged strategically.",
-    "Knowledge management is a strategic asset driving innovation and operational excellence. Advanced technologies such as AI support capturing, curating, and disseminating logistics knowledge in real time. The organization fosters a global learning network including suppliers and partners. Best practice sharing accelerates improvement cycles and competitive advantage. Learning agility is embedded in the culture."
-  ]
-},
-
-// 42. Safety Culture — Logistics & Supply Chain
-{
-  dimensionName: "Safety Culture",
-  sectorName: "Logistics",
-  levels: [
-    "Safety practices are minimal and reactive, with accidents and incidents often caused by unsafe conditions or behaviors. Safety training is limited or inconsistent. Employees may feel unsafe or reluctant to report hazards. Safety policies exist but are poorly enforced. Incident investigations focus on blame rather than prevention.",
-    "Basic safety protocols and training programs are implemented. Hazard reporting increases but may still be informal or inconsistent. Safety incidents begin to decrease as awareness grows. Supervisors emphasize compliance but may lack coaching skills. Safety is recognized as important but not yet ingrained in daily behaviors.",
-    "Safety culture develops with active employee participation in hazard identification and risk mitigation. Safety committees and regular audits support continuous improvement. Near-miss reporting and root cause analysis become standard. Leadership visibly supports safety initiatives. Training and communication reinforce safe behaviors.",
-    "Safety is integrated into all logistics processes and daily management systems. Proactive hazard controls and safety performance metrics drive behavior change. Employees are empowered to stop work for safety concerns. Safety leadership is visible and accountable. Continuous learning from incidents and data analysis reduces risks.",
-    "Safety culture is exemplary, characterized by zero harm philosophy and proactive risk management. Advanced technologies support hazard detection and prevention. Safety excellence is recognized internally and externally. The organization fosters psychological safety and continuous safety innovation. Safety performance drives operational excellence and reputation."
-  ]
-},
-// 43. Innovation Capability — Logistics & Supply Chain
-{
-  dimensionName: "Innovation Capability",
-  sectorName: "Logistics",
-  levels: [
-    "Innovation efforts are rare and often limited to reactive problem solving. There is little support or structure for creative ideas or experimentation. Employees may be hesitant to propose changes due to fear of failure or lack of incentives. Innovation is not a strategic priority. Processes are largely traditional and incremental.",
-    "Some isolated innovation initiatives occur, often driven by specific projects or external consultants. Teams experiment with new ideas but lack systematic evaluation or support. Leadership begins to recognize the importance of innovation but struggles to embed it culturally. Innovation efforts are sporadic and uncoordinated.",
-    "Innovation capability grows with structured programs encouraging idea generation and experimentation. Cross-functional teams collaborate on pilot projects and improvements. Resources and time are allocated for innovation activities. Successes are celebrated and shared. Innovation begins to influence logistics processes and technology adoption.",
-    "Innovation is integrated into the continuous improvement culture and strategic planning. The organization fosters creativity, risk-taking, and learning from failure. Collaborative partnerships with suppliers, customers, and technology providers enhance innovation. Advanced tools and methodologies support rapid prototyping and scaling. Innovation contributes significantly to competitive advantage.",
-    "Innovation is a core organizational competency and cultural norm. The logistics operation continuously pioneers new technologies, processes, and business models. Innovation ecosystems extend beyond the company to include external partners and industry consortia. The organization systematically measures and rewards innovation impact. Logistics innovation leads industry transformation."
-  ]
-},
-
-// 44. Workforce Flexibility and Multi-Skilling — Logistics & Supply Chain
-{
-  dimensionName: "Workforce Flexibility and Multi-Skilling",
-  sectorName: "Logistics",
-  levels: [
-    "Workforce roles are rigid and narrowly defined, limiting flexibility and adaptability. Cross-training is minimal or absent. Employees perform repetitive tasks without exposure to other functions. Staffing challenges arise during peak periods or disruptions. The workforce is vulnerable to turnover and skill shortages.",
-    "Some cross-training programs are introduced, often in response to operational needs. Multi-skilling is encouraged but limited to specific teams or roles. Employees begin to understand the benefits of flexibility but may lack motivation or support. Workforce planning remains reactive. Scheduling is inflexible.",
-    "Structured multi-skilling programs are implemented, enabling employees to perform multiple tasks and rotate across functions. Flexibility improves response to demand variability and reduces bottlenecks. Workforce planning incorporates skills availability and development. Employees are motivated through recognition and development opportunities. Scheduling adapts to workload fluctuations.",
-    "Workforce flexibility is embedded in logistics operations with ongoing multi-skilling and competency development. Cross-functional teams optimize labor deployment based on demand and skills. Training is continuous and linked to career pathways. Workforce agility supports innovation and improvement initiatives. Scheduling and resource allocation are dynamic and data-driven.",
-    "Workforce flexibility is strategic and optimized through predictive analytics and real-time workforce management systems. Employees are highly skilled, empowered, and engaged in continuous learning. Multi-skilling supports seamless operations and rapid adaptation to change. Workforce strategy aligns with business goals and innovation. The organization is recognized for talent development and workforce excellence."
-  ]
-},
-
-// 45. Data-Driven Decision Making — Logistics & Supply Chain
-{
-  dimensionName: "Data-Driven Decision Making",
-  sectorName: "Logistics",
-  levels: [
-    "Decisions are primarily based on intuition, experience, or limited data. Data collection is inconsistent and often inaccurate. Reporting is delayed, hindering timely responses. There is limited analytical capability or culture of data use. Decision-making is reactive and fragmented.",
-    "Basic data collection and reporting systems support decision-making in select areas. Managers begin using metrics to monitor performance and identify issues. Data accuracy and timeliness improve but are still limited. Analytical skills and tools are underdeveloped. Decisions are increasingly informed but not fully data-driven.",
-    "Data-driven decision-making is established across logistics functions with regular use of performance metrics and analysis. Data visualization and dashboards support monitoring and problem-solving. Analytical capabilities are developed, including root cause analysis and forecasting. Decisions are proactive and aligned with strategic goals. Data quality and governance improve.",
-    "Advanced analytics and business intelligence tools enable predictive and prescriptive decision-making. Data is integrated across systems for comprehensive insights. Cross-functional teams collaborate on data interpretation and action planning. Data literacy is widespread, and decision-making is evidence-based and agile. Continuous improvement is guided by data trends.",
-    "Data-driven decision-making is embedded into the organizational DNA, supported by AI, machine learning, and real-time analytics. Decisions are optimized continuously, balancing operational efficiency, customer needs, and strategic objectives. The organization leads in data innovation and shares insights externally. Data governance and security are exemplary. Data culture drives competitive advantage."
-  ]
-},
-
-// 46. Employee Engagement and Ownership — Logistics & Supply Chain
-{
-  dimensionName: "Employee Engagement and Ownership",
-  sectorName: "Logistics",
-  levels: [
-    "Employee engagement is low, with limited motivation or connection to organizational goals. Frontline workers often feel like cogs in the machine, with little sense of ownership over their work or improvement initiatives. Communication is mostly one-way from management, and feedback mechanisms are lacking. Turnover may be high, and absenteeism common. Engagement is not measured or prioritized.",
-    "Some efforts to engage employees through suggestion programs or team meetings begin. Employees are encouraged to share ideas, but follow-up and implementation are inconsistent. Communication improves but remains largely top-down. Engagement levels vary widely between teams and locations. Recognition and rewards for engagement are sporadic.",
-    "Employee engagement is actively fostered through regular two-way communication, empowerment in problem-solving, and involvement in improvement projects. Teams take ownership of local processes and contribute to broader goals. Engagement surveys and feedback mechanisms are used to monitor morale and participation. Recognition programs reinforce positive behaviors. Engagement contributes to operational improvements.",
-    "Engagement is deeply embedded in culture and leadership practices. Employees are encouraged and enabled to take initiative, innovate, and lead improvements. Leadership coaches and supports employees consistently. High engagement correlates with improved performance metrics and retention. Employee voice is influential in decision-making and strategy.",
-    "Employee engagement is a strategic priority and a source of competitive advantage. Ownership and accountability are ingrained at all levels, with employees actively shaping logistics operations and culture. Engagement metrics are closely monitored and linked to business outcomes. The organization fosters a culture of trust, respect, and continuous dialogue. Employees are brand ambassadors and champions of Lean principles."
-  ]
-},
-
-// 47. Governance and Accountability — Logistics & Supply Chain
-{
-  dimensionName: "Governance and Accountability",
-  sectorName: "Logistics",
-  levels: [
-    "Governance structures are unclear or ineffective, with limited accountability for Lean initiatives or logistics performance. Roles and responsibilities are poorly defined. Performance issues are addressed inconsistently. There is little oversight or follow-through on improvement projects. Decision-making lacks transparency.",
-    "Basic governance mechanisms, such as committees or steering groups, are formed to oversee Lean activities. Accountability begins to be assigned but enforcement is uneven. Roles and responsibilities are clarified but not fully embraced. Some performance reviews include Lean or logistics metrics. Governance processes are informal.",
-    "Clear governance frameworks define roles, responsibilities, and escalation paths for logistics and Lean initiatives. Regular reviews monitor progress and ensure accountability. Governance includes cross-functional participation and leadership sponsorship. Performance and improvement outcomes are tracked systematically. Transparency improves decision-making and resource allocation.",
-    "Governance is formalized and integrated with organizational strategy and risk management. Accountability is reinforced through performance contracts and incentives. Governance processes include continuous feedback and adjustment. Cross-functional collaboration supports holistic oversight. Governance drives sustainable Lean deployment and operational excellence.",
-    "Governance is agile, data-driven, and embedded at all organizational levels. Accountability is transparent, consistent, and linked to strategic outcomes. Governance structures foster innovation, collaboration, and rapid decision-making. Continuous improvement and risk management are integral to governance. The organization is recognized for exemplary governance practices."
-  ]
-},
-
-// 48. Customer-Centric Process Design — Logistics & Supply Chain
-{
-  dimensionName: "Customer-Centric Process Design",
-  sectorName: "Logistics",
-  levels: [
-    "Process design focuses primarily on internal efficiency without considering customer needs or experiences. Customer requirements are not systematically captured or incorporated. Processes are rigid and reactive, leading to customer complaints and dissatisfaction. Feedback loops from customers are limited or absent. Customer-centric thinking is minimal.",
-    "Some processes begin to incorporate customer feedback and requirements. Design changes address specific complaints or issues but lack holistic consideration. Customer data is collected sporadically and used reactively. Process improvements prioritize operational convenience over customer value. Collaboration with customer-facing teams is limited.",
-    "Processes are designed and improved with regular input from customers and frontline staff. Customer journey mapping and value stream mapping include customer touchpoints. Improvements aim to enhance customer satisfaction, reduce lead times, and improve service quality. Customer feedback is systematically gathered and incorporated. Cross-functional collaboration supports customer-centric design.",
-    "Customer-centric process design is standard practice, aligned with strategic customer value propositions. Processes are flexible, adaptive, and designed to exceed customer expectations. Real-time customer feedback informs continuous improvement. Collaboration extends to suppliers and partners to ensure end-to-end customer experience. The organization proactively anticipates customer needs.",
-    "Customer-centric design is embedded in organizational culture and innovation strategy. Processes evolve continuously based on deep customer insights and predictive analytics. Customer co-creation and partnerships drive process innovation. The organization leads industry standards in customer experience excellence. Customer-centricity is a key competitive differentiator."
-  ]
-},
-
-// 49. Resource Optimization — Logistics & Supply Chain
-{
-  dimensionName: "Resource Optimization",
-  sectorName: "Logistics",
-  levels: [
-    "Resource use (labor, equipment, space) is inefficient and poorly managed. Overstaffing or understaffing is common, and equipment downtime reduces productivity. Space utilization is suboptimal, causing congestion and delays. Resource allocation is reactive and based on short-term needs. Waste and costs are high.",
-    "Basic resource planning tools and scheduling improve labor and equipment utilization. Teams begin identifying resource bottlenecks and reallocating as needed. Space management is addressed in some areas but not comprehensively. Resource optimization efforts are localized and not sustained. Efficiency gains are inconsistent.",
-    "Resource optimization is systematic, supported by workforce management systems and equipment maintenance plans. Space utilization is monitored and improved through layout redesigns. Resource allocation aligns with demand forecasts and operational priorities. Continuous improvement initiatives target resource waste reduction. Metrics track resource productivity.",
-    "Advanced analytics and automation optimize resource deployment dynamically. Labor, equipment, and space are flexibly allocated to balance workload and maximize throughput. Cross-functional coordination enhances resource efficiency. Resource optimization supports sustainability goals and cost reduction. Performance targets include resource utilization metrics.",
-    "Resource optimization is predictive, continuous, and integrated with business strategy. AI and real-time data adjust resources proactively to changing conditions. The organization achieves high asset utilization with minimal waste. Resource strategies align with innovation and growth objectives. Resource optimization contributes to competitive advantage and sustainability leadership."
-  ]
-},
-
-// 50. Leadership Development — Logistics & Supply Chain
-{
-  dimensionName: "Leadership Development",
-  sectorName: "Logistics",
-  levels: [
-    "Leadership development is minimal and unstructured. Supervisors and managers receive limited training focused mainly on operational tasks. Coaching and mentoring are rare. Leadership capabilities are inconsistent, affecting team performance and Lean adoption. Succession planning is absent.",
-    "Basic leadership training programs are introduced, covering communication, problem-solving, and Lean awareness. Some coaching and mentoring occur but lack consistency and depth. Leadership development is reactive, often in response to performance issues. Leadership roles and expectations begin to be clarified.",
-    "Structured leadership development programs exist, including formal training, coaching, and mentoring. Leadership competencies align with Lean principles and organizational goals. Leadership development is planned and evaluated systematically. Leaders actively support continuous improvement and employee engagement. Succession planning starts.",
-    "Leadership development is integrated into talent management and business strategy. Leadership programs include advanced Lean coaching, change management, and strategic thinking. Leaders model Lean behaviors and drive cultural transformation. Continuous leadership assessment and development sustain capability. Succession planning ensures leadership pipeline strength.",
-    "Leadership development is proactive, personalized, and aligned with future organizational needs. Leaders at all levels are empowered to innovate and coach Lean culture. Leadership programs incorporate external benchmarking and thought leadership. The organization fosters a community of practice among leaders. Leadership excellence is a core competitive advantage."
-  ]
-},
-
-// 51. Problem-Solving Methodologies — Logistics & Supply Chain
-{
-  dimensionName: "Problem-Solving Methodologies",
-  sectorName: "Logistics",
-  levels: [
-    "Problem-solving is mostly reactive and informal, relying on quick fixes rather than systematic approaches. Issues often recur because root causes are not identified or addressed. Employees have limited knowledge of structured problem-solving tools. Solutions tend to focus on symptoms rather than underlying problems. Learning from problems is minimal.",
-    "Basic problem-solving techniques such as 5 Whys and PDCA cycles are introduced in select teams. Improvement events focus on resolving immediate issues. Training on methodologies is limited and not standardized. Some teams begin documenting problems and solutions but follow-up is inconsistent. Problem-solving remains largely event-driven.",
-    "Structured problem-solving methodologies are widely adopted across logistics functions. Teams use tools such as A3 reports, root cause analysis, and standard work to systematically address issues. Problem-solving is integrated into daily work, with documented actions and results. Supervisors coach teams in effective methodologies. Problem-solving supports continuous improvement.",
-    "Advanced problem-solving techniques and data analytics support complex and cross-functional issue resolution. Teams collaborate proactively to anticipate and prevent problems. Problem-solving outcomes are linked to performance metrics and shared broadly. Continuous learning from problems drives innovation. Problem-solving culture is strong and embedded.",
-    "Problem-solving is a strategic capability, leveraging AI and predictive analytics to identify risks and opportunities. The organization fosters innovation through experimentation and rapid iteration. Lessons learned are institutionalized and disseminated globally. Problem-solving drives breakthrough improvements and competitive advantage. The culture celebrates challenges as opportunities."
-  ]
-},
-
-// 52. Change Leadership — Logistics & Supply Chain
-{
-  dimensionName: "Change Leadership",
-  sectorName: "Logistics",
-  levels: [
-    "Change initiatives are poorly managed, with limited leadership support or clear communication. Employees resist changes due to fear, lack of understanding, or mistrust. Change efforts often fail or stall. There is little planning or follow-up. Change is viewed as disruptive rather than beneficial.",
-    "Change leadership skills begin to develop with some training for managers. Communication improves but is inconsistent. Change initiatives are more structured but still lack broad engagement. Leaders struggle to address resistance effectively. Employees have limited involvement in change processes.",
-    "Leaders actively lead change efforts, communicating vision and rationale clearly. Stakeholders are engaged early, and resistance is managed proactively. Change management tools and processes support successful adoption. Training and coaching help employees adapt. Change leadership is recognized as critical.",
-    "Change leadership is embedded into leadership development and organizational culture. Leaders model adaptability and resilience. Change initiatives are aligned with strategy and involve cross-functional collaboration. Continuous feedback and improvement strengthen change outcomes. The organization embraces change as an opportunity.",
-    "Change leadership is a core competency driving agility and transformation. Leaders foster a culture of innovation and continuous adaptation. Change is anticipated and managed proactively using data and insights. The organization thrives in dynamic environments, maintaining competitive advantage. Change leadership excellence is benchmarked and shared."
-  ]
-},
-
-// 53. Cross-Training and Knowledge Transfer — Logistics & Supply Chain
-{
-  dimensionName: "Cross-Training and Knowledge Transfer",
-  sectorName: "Logistics",
-  levels: [
-    "Cross-training is minimal or nonexistent. Employees perform narrow roles with little exposure to other functions. Knowledge transfer relies on individual initiative rather than formal programs. Skill gaps create vulnerabilities during absences or turnover. Workforce flexibility is low.",
-    "Some cross-training programs are initiated, often informally or in response to staffing needs. Knowledge transfer occurs through shadowing or mentoring but lacks structure. Employees recognize the benefits of cross-training but participation is limited. Workforce flexibility improves slightly. Documentation of skills is inconsistent.",
-    "Structured cross-training and knowledge transfer programs are implemented across logistics functions. Training plans and schedules ensure coverage of critical skills. Mentoring and peer coaching support knowledge sharing. Workforce flexibility and coverage improve. Skill documentation is maintained and used for planning.",
-    "Cross-training is integrated into workforce development and operational planning. Employees are regularly rotated to build broad capabilities. Knowledge transfer supports continuous improvement and innovation. Technology tools assist skill tracking and learning. Workforce agility enhances operational resilience.",
-    "Cross-training and knowledge transfer are strategic priorities supported by advanced learning platforms and personalized development plans. The workforce is highly adaptable, with deep multi-functional skills. Knowledge transfer networks extend across partners and suppliers. Continuous learning is embedded in culture. Workforce capability is a competitive differentiator."
-  ]
-},
-
-// 54. Visual Controls for Safety and Quality — Logistics & Supply Chain
-{
-  dimensionName: "Visual Controls for Safety and Quality",
-  sectorName: "Logistics",
-  levels: [
-    "Visual controls related to safety and quality are sparse or absent. Employees rely on verbal instructions or written policies that are not easily accessible. Safety hazards and quality issues may go unnoticed or unaddressed. Training on visual controls is minimal. Incident rates are high.",
-    "Basic visual controls such as signage, labels, and warning indicators are implemented in key areas. Employees begin to use visual cues to identify hazards or quality checkpoints. Visual controls are inconsistent and not standardized. Training on their use is limited. Safety and quality improve but remain reactive.",
-    "Visual controls for safety and quality are standardized and integrated into workflows. Color-coding, floor markings, and checklists guide employee behavior and inspections. Visual management boards display safety and quality metrics prominently. Employees are trained and accountable for maintaining controls. Incident rates decline.",
-    "Visual controls are dynamic and supported by digital technologies such as sensors and alerts. Controls are reviewed and updated regularly based on risk assessments and data analysis. Leadership uses visual data to coach and engage teams. Safety and quality culture is proactive and continuously improving. Visual controls prevent incidents before they occur.",
-    "Visual controls are fully integrated with real-time monitoring systems and predictive analytics. Automated alerts and dashboards provide immediate feedback on safety and quality status. Employees and leaders use visual data to drive continuous innovation and risk reduction. The organization benchmarks and shares best practices. Visual control excellence supports world-class safety and quality performance."
-  ]
-},
-
-// 55. Lean Culture Alignment — Logistics & Supply Chain
-{
-  dimensionName: "Lean Culture Alignment",
-  sectorName: "Logistics",
-  levels: [
-    "Lean culture is poorly understood or embraced, often viewed as a set of tools rather than a mindset. Employees may be skeptical or resistant. Lean initiatives are project-based with limited sustainability. Communication about Lean values and behaviors is minimal. Cultural change is not managed.",
-    "Awareness of Lean culture grows through training and initial engagement efforts. Some teams begin to adopt Lean behaviors, but consistency is lacking. Leadership communicates Lean importance but may lack role modeling. Lean is often seen as separate from daily work. Cultural gaps remain.",
-    "Lean culture is established with widespread understanding and adoption of Lean principles and behaviors. Leadership models Lean values consistently. Employees are empowered and engaged in continuous improvement. Lean behaviors are reinforced through recognition and performance management. Culture supports Lean sustainability.",
-    "Lean culture is deeply embedded and drives decision-making, problem-solving, and innovation. Cross-functional collaboration and learning are hallmarks. Leaders develop Lean capabilities and coach others. Continuous improvement is part of organizational DNA. Culture adapts dynamically to challenges.",
-    "Lean culture is a defining organizational characteristic, driving strategic advantage and resilience. Lean thinking permeates all levels and functions, including partners and suppliers. The organization leads in Lean innovation and culture development. Lean culture is measured, managed, and continuously evolved. It supports excellence and transformation."
-  ]
-},
-
-// 56. Technology Adoption for Lean — Logistics & Supply Chain
-{
-  dimensionName: "Technology Adoption for Lean",
-  sectorName: "Logistics",
-  levels: [
-    "Technology use is limited and often disconnected from Lean objectives. Manual processes dominate. Technology adoption is reactive, driven by cost or compliance rather than Lean improvement. Employees may lack skills or confidence in technology. Integration between systems is poor.",
-    "Selective adoption of technologies such as barcode scanners or basic warehouse management systems begins. Technology supports some Lean projects but is not fully integrated. Training and support are limited. Technology benefits are realized unevenly. Resistance to change persists.",
-    "Technology adoption aligns with Lean objectives, supporting process standardization, visual management, and data collection. Systems integrate to improve workflow and visibility. Employees are trained and engaged in technology use. Technology enables continuous improvement and problem-solving. Investments support Lean strategy.",
-    "Advanced technologies such as automation, robotics, and real-time analytics are deployed to enhance Lean processes. Integration across logistics systems supports seamless operations. Technology drives innovation and operational excellence. Change management supports adoption and optimization. Technology ROI is monitored.",
-    "Technology adoption is strategic, innovative, and continuous. Emerging technologies such as AI, IoT, and machine learning transform Lean logistics operations. The organization leads in technology-enabled Lean innovation. Digital maturity supports agility, transparency, and sustainability. Technology is a key competitive differentiator."
-  ]
-},
-
-// 57. Sustainability Metrics and Reporting — Logistics & Supply Chain
-{
-  dimensionName: "Sustainability Metrics and Reporting",
-  sectorName: "Logistics",
-  levels: [
-    "Sustainability metrics are not defined or tracked in logistics operations. Reporting on environmental impact is minimal or absent. Awareness of sustainability’s importance is low. Compliance with regulations is reactive and limited. Sustainability is not linked to business performance.",
-    "Basic sustainability metrics such as energy use, waste generation, or emissions are collected in some areas. Reporting is periodic and focused on compliance. Awareness among employees and leadership grows. Sustainability initiatives are localized and project-based. Data quality and consistency vary.",
-    "Comprehensive sustainability metrics are defined, collected, and analyzed across logistics functions. Reporting is regular and supports management decisions. Sustainability goals align with corporate strategy. Employees participate in sustainability initiatives. Continuous improvement targets environmental performance.",
-    "Sustainability metrics are integrated with financial and operational KPIs. Reporting is transparent and communicated to stakeholders. Data analytics support identifying improvement opportunities. Sustainability performance influences planning and resource allocation. The organization benchmarks and shares results externally.",
-    "Sustainability metrics and reporting are strategic and innovative. Real-time monitoring and predictive analytics enable proactive environmental management. Reporting meets or exceeds industry and regulatory standards. Stakeholder engagement and transparency are exemplary. Sustainability performance drives competitive advantage and reputation."
-  ]
-}
 
 // 1. Leadership Commitment — Logistics & Supply Chain
 {
@@ -2401,7 +1662,7 @@ async function main() {
     "Sustainability metrics are integrated with financial and operational KPIs. Reporting is transparent and communicated to stakeholders. Data analytics support identifying improvement opportunities. Sustainability performance influences planning and resource allocation. The organization benchmarks and shares results externally.",
     "Sustainability metrics and reporting are strategic and innovative. Real-time monitoring and predictive analytics enable proactive environmental management. Reporting meets or exceeds industry and regulatory standards. Stakeholder engagement and transparency are exemplary. Sustainability performance drives competitive advantage and reputation."
   ]
-}
+},
 
 
 
@@ -2442,7 +1703,7 @@ async function main() {
     "The Lean mindset is well established and actively drives daily manufacturing operations. Teams proactively challenge existing processes to reduce waste and variability, using Lean principles in meetings, planning, and decision-making. Cross-functional collaboration is strong, focused on improving end-to-end flow. Continuous improvement behaviors are widespread, and employees support each other’s development.",
     "Lean thinking is fully ingrained in the culture, with continuous improvement and innovation guiding everything from daily work to strategic planning. Teams instinctively seek ways to improve performance and customer satisfaction, driven by data and experimentation. Lean language and behaviors are consistent at all levels, and the organization is recognized as an industry leader for Lean culture and performance."
   ]
-}
+},
 
 
 
@@ -2483,7 +1744,7 @@ async function main() {
     "Real-time escalation systems and issue trackers connect frontline teams with engineers and managers for prompt resolution of problems. Standardized visual tools and digital platforms support transparent, consistent communication. Frontline staff are invited to participate in reviews, and collaboration across sites grows. Communication supports both operational flow and continuous improvement.",
     "Communication systems fully integrate frontline teams with leadership through digital and in-person channels, making feedback traceable and actionable. Operators are engaged in strategic planning and problem-solving at all levels, and open dialogue is the cultural norm. Cross-department and cross-site communication is seamless, aligning the entire organization. Transparent, timely communication drives unity and continuous improvement."
   ]
-}
+},
 
 // 7. Lean Training and Education — Manufacturing
 {
@@ -2522,7 +1783,7 @@ async function main() {
     "Change management becomes proactive, with roadmaps developed in collaboration with operators and key stakeholders. Simulations and pilot programs prepare teams for upcoming shifts, and pre- and post-implementation reviews capture lessons learned. Visual tools and robust communication plans help ensure smooth transitions and minimize resistance. Change readiness is now part of daily management.",
     "Change readiness is institutionalized and tracked as a core competency, with leaders coaching teams through transitions using real-time data and feedback. Cross-functional collaboration ensures change has minimal disruption and maximum buy-in. Continuous improvement and change are inseparable, and the workforce is skilled in rapid adaptation. The organization thrives in dynamic conditions and rapidly innovates to meet new challenges."
   ]
-}
+},
 
 // 10. Daily Problem-Solving Culture — Manufacturing
 {
@@ -2561,7 +1822,7 @@ async function main() {
     "Comprehensive and dynamic value stream maps are maintained across all manufacturing operations and regularly updated using data-driven insights. Cross-functional collaboration is strong, and accountability for value delivery is shared among teams. Supplier and customer touchpoints are included in the maps, ensuring improvements extend beyond internal processes. Continuous improvement leverages mapping outputs to drive system-wide gains.",
     "Value stream maps are fully integrated with real-time digital systems, enabling predictive analytics and seamless coordination across the entire operation. Manufacturing processes operate as a synchronized system, delivering maximum customer value with minimal waste. Mapping extends beyond the company to suppliers and customers, supporting external collaboration. Ongoing innovation and benchmarking are driven by value stream insights."
   ]
-}
+},
 
 // 13. Process Flow Efficiency — Manufacturing
 {
@@ -2600,7 +1861,7 @@ async function main() {
     "Visual management is standardized and integrated throughout the factory, including real-time dashboards and digital displays. Visual tools are used by leaders and teams for coaching, monitoring, and supporting timely decision-making. Visual cues support workflow, inventory levels, and quality checks, driving transparency and accountability. The visual management system becomes a key enabler of Lean practices.",
     "Visual management is fully digital, interactive, and accessible across the organization, with automated data flows from production systems to displays. Visuals support predictive analysis and strategic alignment, making current status and priorities clear to everyone at a glance. Visitors and new employees instantly understand operational performance and improvement priorities. Visual management drives a culture of transparency, empowerment, and continuous improvement."
   ]
-}
+},
 
 // 16. 5S Implementation — Manufacturing
 {
@@ -2639,7 +1900,7 @@ async function main() {
     "Changeover processes are audited and systematically improved based on operator input and performance data. Simulation and cross-training help prepare staff for rapid, safe transitions. Improvements are shared across multiple sites, and changeovers are synchronized with production plans. The focus is on maximizing equipment utilization and minimizing disruptions.",
     "Rapid, error-free changeovers are achieved consistently through advanced technologies and process innovations. Automation and predictive scheduling enable near-instant transitions, supporting high-mix, low-volume manufacturing. Changeover performance is benchmarked against industry leaders and drives responsiveness to customer needs. Excellence in setup reduction enables agile, world-class manufacturing."
   ]
-}
+},
 // 19. Error-Proofing (Poka-Yoke) — Manufacturing
 {
   dimensionName: "Error-Proofing (Poka-Yoke)",
@@ -2677,7 +1938,7 @@ async function main() {
     "Real-time quality monitoring and analytics provide immediate feedback to operators and supervisors. Cross-functional teams collaborate on quality improvements, and advanced tools support trend analysis and preventative action. Quality performance is discussed in daily meetings and tied to performance reviews. Proactive prevention is the cultural norm.",
     "Quality is proactively designed and managed into every manufacturing process through advanced digital tools and continuous learning. Employees innovate new methods for defect prevention and share best practices internally and externally. Quality metrics drive strategic decisions and customer partnerships. The organization is recognized as a benchmark for quality-at-source excellence."
   ]
-}
+},
 // 22. Level Loading / Heijunka — Manufacturing
 {
   dimensionName: "Level Loading / Heijunka",
@@ -2715,7 +1976,7 @@ async function main() {
     "Integration extends to suppliers and customers, creating a synchronized and responsive value stream. Planning and execution are coordinated for minimal delays and waste, with shared accountability for value delivery. Continuous improvement projects include external partners for greater impact.",
     "The value stream operates as a seamless, customer-focused ecosystem, enabled by real-time data integration and digital platforms. Joint improvement projects drive innovation, efficiency, and responsiveness across company boundaries. The organization is recognized as a leader in value stream integration."
   ]
-}
+},
 // 25. Waste Identification and Elimination — Manufacturing
 {
   dimensionName: "Waste Identification and Elimination",
@@ -2753,7 +2014,7 @@ async function main() {
     "Documentation is fully integrated with digital workflows and enterprise systems, providing real-time visibility and traceability. Errors and omissions are rare due to validation and automation, and continuous monitoring ensures data quality. Documentation supports regulatory compliance, customer requirements, and efficient operations. Teams use documentation insights to drive improvements.",
     "Seamless, automated documentation processes are a hallmark of operational excellence. Advanced digital platforms capture, validate, and analyze data across the entire manufacturing lifecycle. Documentation accuracy supports real-time decision-making and transparency with customers and regulators. Continuous improvement and best practice sharing are enabled by high-quality documentation."
   ]
-}
+},
 // 28. Digitization of Workflows — Manufacturing
 {
   dimensionName: "Digitization of Workflows",
@@ -2791,7 +2052,7 @@ async function main() {
     "Strategy deployment is dynamic and data-driven, with real-time tracking of key metrics and flexible adjustment to market or operational changes. Leadership and teams engage in frequent feedback cycles to ensure alignment and remove barriers. Continuous improvement initiatives are consistently tied to strategic priorities. Transparent communication and shared goals drive performance at all levels.",
     "Strategy deployment is fully integrated, agile, and participatory, engaging employees at every level in achieving strategic objectives. Digital platforms provide transparent progress tracking and enable rapid adaptation to change. Continuous alignment and accountability are cultural norms. Lean principles guide both the execution and governance of strategy, delivering a distinct competitive advantage."
   ]
-}
+},
 
 // 31. Supplier Collaboration — Manufacturing
 {
@@ -2830,7 +2091,7 @@ async function main() {
     "Real-time measurement and advanced analytics are integrated throughout manufacturing, supporting predictive management and proactive decision-making. Metrics align with corporate strategy and are cascaded to all levels. Teams use data to anticipate problems, drive continuous improvement, and communicate results openly. Performance reviews are routine and data-driven.",
     "Performance measurement is a strategic capability, utilizing AI, benchmarking, and continuous learning to refine metrics and targets. Data is transparent, predictive, and drives accountability throughout the supply chain. The organization shares insights and best practices externally, influencing industry standards. Performance excellence is a recognized source of competitive advantage."
   ]
-}
+},
 
 // 34. Sustainability and Environmental Responsibility — Manufacturing
 {
@@ -2869,7 +2130,7 @@ async function main() {
     "Digital visual management systems provide real-time data to all relevant personnel, supporting proactive decisions and continuous improvement. Visuals are integrated with meetings, coaching, and feedback loops, driving transparency across teams. Metrics are adapted dynamically to business needs and evolving targets. Visual management fosters collaboration and rapid problem response.",
     "Visual performance management is fully integrated with enterprise systems, offering interactive dashboards and predictive analytics across all sites and levels. Visual tools cascade strategy and performance targets throughout the organization, driving culture, transparency, and learning. Best practices are benchmarked and shared externally. The organization sets industry standards for visual management excellence."
   ]
-}
+},
 
 // 37. Risk Management and Mitigation — Manufacturing
 {
@@ -2908,7 +2169,7 @@ async function main() {
     "Advanced IT integration connects manufacturing operations internally and with external partners via cloud platforms, APIs, and digital dashboards. Systems support workflow automation, predictive analytics, and rapid decision-making. IT strategy is aligned with business goals, and continuous digital improvement is embedded in governance.",
     "Information technology is fully integrated, intelligent, and central to manufacturing strategy. AI, machine learning, and blockchain technologies optimize transparency, traceability, and performance. Real-time digital collaboration with suppliers and customers drives efficiency and innovation. The organization leads the sector in digital manufacturing excellence."
   ]
-}
+},
 
 // 40. Cross-Functional Collaboration — Manufacturing
 {
@@ -2947,7 +2208,7 @@ async function main() {
     "Safety is fully integrated into all manufacturing processes and management systems. Proactive hazard controls, performance metrics, and employee empowerment drive ongoing improvements. Employees are authorized to stop work for safety concerns, and leadership is visible and accountable. Continuous learning from incidents and data analysis significantly reduces risks.",
     "Safety culture is exemplary, embracing a zero-harm philosophy and advanced risk management. Technology supports hazard detection and prevention, and safety excellence is celebrated both internally and externally. Psychological safety encourages open reporting and continuous safety innovation. Outstanding safety performance is a recognized hallmark of the organization."
   ]
-}
+},
 
 // 43. Innovation Capability — Manufacturing
 {
@@ -2986,7 +2247,7 @@ async function main() {
     "Advanced analytics and business intelligence systems enable predictive and prescriptive insights, integrating data from multiple functions for comprehensive views. Cross-functional teams collaborate on data interpretation and action planning, and data literacy is widespread. Real-time data drives proactive decision-making, process optimization, and innovation.",
     "Data-driven culture is embedded throughout the organization, powered by AI, machine learning, and real-time analytics. Decision-making is continuously optimized to balance efficiency, quality, and strategic objectives. The company leads the industry in data innovation, sharing insights externally and setting new standards for data governance, transparency, and business impact."
   ]
-}
+},
 
 // 46. Employee Engagement and Ownership — Manufacturing
 {
@@ -3025,7 +2286,7 @@ async function main() {
     "Customer-centric design becomes standard, with flexible and adaptive processes developed to exceed customer expectations. Real-time customer feedback informs continuous improvement, and collaboration extends to suppliers and partners to optimize end-to-end experiences. The organization proactively anticipates customer needs and integrates them into process design and innovation.",
     "Customer-centricity is embedded in culture and strategy, with process evolution driven by deep customer insights and predictive analytics. Customers co-create solutions, and partnerships drive ongoing innovation. The organization is recognized as an industry leader for customer experience, with processes continuously benchmarked and refined to maintain competitive advantage."
   ]
-}
+},
 
 // 49. Resource Optimization — Manufacturing
 {
@@ -3064,7 +2325,7 @@ async function main() {
     "Advanced analytical techniques and data-driven methods support resolution of complex and cross-functional problems. Teams proactively anticipate and prevent issues, with outcomes linked to performance metrics and shared widely. Continuous learning from problem-solving efforts accelerates innovation. A strong culture of problem-solving emerges.",
     "Problem-solving is a strategic capability powered by AI, predictive analytics, and rapid iteration. The organization celebrates learning from challenges, institutionalizes lessons globally, and fosters experimentation. Breakthrough improvements and innovation are driven by robust problem-solving methodologies, sustaining competitive advantage."
   ]
-}
+},
 
 // 52. Change Leadership — Manufacturing
 {
@@ -3103,7 +2364,7 @@ async function main() {
     "Digital technologies enhance visual controls, with sensors and alerts supporting dynamic risk prevention. Regular reviews and updates keep controls relevant, and leaders use visual data to engage teams in proactive problem-solving. Safety and quality become cultural norms. Visual management is leveraged for continuous improvement.",
     "Visual controls are fully integrated with real-time monitoring, predictive analytics, and automated feedback. Dashboards and alerts provide immediate visibility of safety and quality status across the operation. Teams and leaders use visual data to drive innovation and minimize risk. Excellence in visual management supports world-class performance."
   ]
-}
+},
 
 // 55. Lean Culture Alignment — Manufacturing
 {
@@ -3142,7 +2403,7 @@ async function main() {
     "Sustainability metrics are fully integrated with operational and financial KPIs, enabling transparent reporting to stakeholders. Advanced data analytics help identify and drive improvement opportunities. Sustainability performance influences planning, resource allocation, and external benchmarking. The culture emphasizes accountability.",
     "Sustainability metrics and reporting are strategic, innovative, and drive proactive environmental management through real-time monitoring and predictive analytics. Reporting meets or exceeds industry standards, supporting exemplary transparency and stakeholder engagement. Sustainability leadership strengthens competitive advantage and reputation."
   ]
-}
+},
 
 // 1. Leadership Commitment — Healthcare
 {

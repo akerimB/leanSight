@@ -40,8 +40,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { toast } from 'sonner';
 
 interface Company {
   id: string;
@@ -65,7 +69,13 @@ interface Category {
   dimensions: Dimension[];
 }
 
-const steps = ['Select Company & Department', 'Assessment Questions', 'Review & Submit'];
+interface WeightingSchemeBasic {
+  id: string;
+  name: string;
+  // Add other fields if needed for display, e.g., isDefault
+}
+
+const steps = ['Select Company, Department & Scheme', 'Assessment Questions', 'Review & Submit'];
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -97,6 +107,9 @@ export default function AssessmentPage() {
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [template, setTemplate] = useState<Category[]>([]);
+  const [availableWeightingSchemes, setAvailableWeightingSchemes] = useState<WeightingSchemeBasic[]>([]);
+  const [selectedWeightingSchemeId, setSelectedWeightingSchemeId] = useState<string>('');
+  const [loadingWeightingSchemes, setLoadingWeightingSchemes] = useState<boolean>(false);
   const [templateLoading, setTemplateLoading] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -108,6 +121,11 @@ export default function AssessmentPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editAssessmentId, setEditAssessmentId] = useState<string | null>(null);
   const [editAssessmentStatus, setEditAssessmentStatus] = useState<string | null>(null);
+
+  // State for delete confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteAssessmentId, setDeleteAssessmentId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Load past assessments list
   useEffect(() => {
@@ -130,6 +148,17 @@ export default function AssessmentPage() {
         .then((data) => setCompanies(data))
         .catch((err) => setError(String(err)))
         .finally(() => setCompaniesLoading(false));
+
+      // Fetch weighting schemes
+      setLoadingWeightingSchemes(true);
+      fetch('/api/weighting-schemes', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : Promise.reject('Failed to load weighting schemes'))
+        .then(data => setAvailableWeightingSchemes(data || []))
+        .catch(err => {
+          console.error('Error fetching weighting schemes:', err);
+          toast.error('Failed to load weighting schemes for selection.');
+        })
+        .finally(() => setLoadingWeightingSchemes(false));
     }
   }, [status]);
 
@@ -174,41 +203,74 @@ export default function AssessmentPage() {
     // Create draft on step 0 when moving to questions
     if (activeStep === 0 && !assessmentId) {
       try {
+        // For company-wide assessments, we explicitly set departmentId to null
+        const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
+        
         const res = await fetch('/api/assessments', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           credentials: 'include',
-          body: JSON.stringify({ companyId: selectedCompany, departmentId: selectedDepartment === 'all' ? null : selectedDepartment, draft: true }),
+          body: JSON.stringify({ 
+            companyId: selectedCompany, 
+            departmentId, 
+            draft: true,
+            weightingSchemeId: selectedWeightingSchemeId || null,
+          }),
         });
-        if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed to start assessment'); }
-        const d = await res.json();
-        setAssessmentId(d.id);
+
+        if (!res.ok) { 
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to start assessment'); 
+        }
+        
+        const data = await res.json();
+        if (!data.id) {
+          throw new Error('Invalid response from server');
+        }
+        setAssessmentId(data.id);
       } catch (err: any) {
-        setError(err.message);
+        console.error('Error creating assessment:', err);
+        setError(err.message || 'Failed to create assessment');
         return;
       }
     }
+    
     // Submit on step 1 (now the questions step)
     if (activeStep === 1) {
       setLoading(true);
       try {
+        const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
+        const answersArray = Object.entries(answers).map(([dimensionId, level]) => ({ 
+          dimensionId, 
+          level 
+        }));
+
         const res = await fetch('/api/assessments', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           credentials: 'include',
           body: JSON.stringify({
             companyId: selectedCompany,
-            departmentId: selectedDepartment === 'all' ? null : selectedDepartment,
-            answers: Object.entries(answers).map(([dimensionId, level]) => ({ dimensionId, level })),
+            departmentId,
+            answers: answersArray,
+            weightingSchemeId: selectedWeightingSchemeId || null,
           }),
         });
+
         if (!res.ok) {
-          const err = await res.json(); throw new Error(err.error || 'Submission failed');
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Submission failed');
         }
         setSuccess(true);
       } catch (err: any) {
-        setError(err.message);
-        setLoading(false);
+        console.error('Error submitting assessment:', err);
+        setError(err.message || 'Failed to submit assessment');
         return;
       } finally {
         setLoading(false);
@@ -266,6 +328,39 @@ export default function AssessmentPage() {
     setEditAssessmentStatus(null);
   };
 
+  const openDeleteDialog = (id: string) => {
+    setDeleteAssessmentId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteAssessmentId(null);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleDeleteAssessment = async () => {
+    if (!deleteAssessmentId) return;
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/assessments?id=${deleteAssessmentId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete assessment');
+      }
+      toast.success('Assessment deleted successfully');
+      // Refresh past assessments list
+      setPastAssessments(prev => prev.filter(assess => assess.id !== deleteAssessmentId));
+      closeDeleteDialog();
+    } catch (error: any) {
+      console.error('Error deleting assessment:', error);
+      toast.error(error.message || 'Failed to delete assessment');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (status === 'loading' || (!session && status === 'authenticated')) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
   }
@@ -299,31 +394,59 @@ export default function AssessmentPage() {
 
           {/* Step 0: Company & Department selection */}
           {activeStep === 0 && (
-            <>
-              {companiesLoading ? (
-                <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
-              ) : (
-                <>
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Company</InputLabel>
-                    <Select value={selectedCompany} label="Company" onChange={(e) => setSelectedCompany(e.target.value)}>
-                      {companies.map((c) => (
-                        <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth>
-                    <InputLabel>Department</InputLabel>
-                    <Select value={selectedDepartment} label="Department" onChange={(e) => setSelectedDepartment(e.target.value)}>
-                      <MenuItem value="all">Company-wide</MenuItem>
-                      {companies.find((c) => c.id === selectedCompany)?.departments.map((d) => (
-                        <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </>
+            <Paper sx={{ p: 3, mt: 2 }}>
+              <Typography variant="h6" gutterBottom>Select Target</Typography>
+              <FormControl fullWidth sx={{ mb: 2 }} disabled={companiesLoading}>
+                <InputLabel id="company-select-label">Company</InputLabel>
+                <Select
+                  labelId="company-select-label"
+                  value={selectedCompany}
+                  label="Company"
+                  onChange={(e) => {
+                    setSelectedCompany(e.target.value as string);
+                    setSelectedDepartment(''); // Reset department on company change
+                  }}
+                >
+                  {companies.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                </Select>
+              </FormControl>
+
+              {selectedCompany && (
+                <FormControl fullWidth sx={{ mb: 2 }} disabled={!selectedCompany || companiesLoading}>
+                  <InputLabel id="department-select-label">Department (or Company-Wide)</InputLabel>
+                  <Select
+                    labelId="department-select-label"
+                    value={selectedDepartment}
+                    label="Department (or Company-Wide)"
+                    onChange={(e) => setSelectedDepartment(e.target.value as string)}
+                  >
+                    <MenuItem value="all"><em>Company-Wide Assessment</em></MenuItem>
+                    {companies.find(c => c.id === selectedCompany)?.departments?.map((d) => (
+                      <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               )}
-            </>
+              
+              {/* Weighting Scheme Selector */}
+              <FormControl fullWidth sx={{ mb: 2 }} disabled={loadingWeightingSchemes}>
+                <InputLabel id="weighting-scheme-select-label">Weighting Scheme (Optional)</InputLabel>
+                <Select
+                  labelId="weighting-scheme-select-label"
+                  value={selectedWeightingSchemeId}
+                  label="Weighting Scheme (Optional)"
+                  onChange={(e: SelectChangeEvent<string>) => setSelectedWeightingSchemeId(e.target.value)}
+                >
+                  <MenuItem value=""><em>None (Results will use even weights or a default)</em></MenuItem>
+                  {availableWeightingSchemes.map((scheme) => (
+                    <MenuItem key={scheme.id} value={scheme.id}>
+                      {scheme.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+            </Paper>
           )}
 
           {activeStep === 1 && (
@@ -482,9 +605,22 @@ export default function AssessmentPage() {
               <List>
                 {pagedAssessments.map(a => (
                   <ListItem key={a.id} secondaryAction={
-                    <Button size="small" onClick={() => handleEdit(a.id, a.status)}>
-                      {a.status === 'DRAFT' ? 'Resume' : 'Edit'}
-                    </Button>
+                    <Box>
+                      <Button size="small" onClick={() => handleEdit(a.id, a.status)} sx={{ mr: 1 }}>
+                        {a.status === 'SUBMITTED' ? 'Review/Edit' : 'Resume'}
+                      </Button>
+                      {(session?.user?.role === 'ADMIN' || session?.user?.id === a.expertId) && (
+                        <IconButton 
+                          onClick={() => openDeleteDialog(a.id)} 
+                          color="error" 
+                          size="small"
+                          aria-label="Delete assessment"
+                          disabled={deleting}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
+                    </Box>
                   }>
                     <ListItemText
                       primary={`${a.company.name} - ${a.department?.name ?? 'Company-wide'}`}
@@ -516,7 +652,7 @@ export default function AssessmentPage() {
         </Box>
       )}
 
-      {/* Confirmation dialog for editing submitted assessments */}
+      {/* Edit Confirmation Dialog */}
       <Dialog open={editDialogOpen} onClose={cancelEdit}>
         <DialogTitle>Edit Submitted Assessment?</DialogTitle>
         <DialogContent>
@@ -525,6 +661,23 @@ export default function AssessmentPage() {
         <DialogActions>
           <Button onClick={cancelEdit}>Cancel</Button>
           <Button onClick={confirmEdit} variant="contained" color="primary">Continue</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this assessment? This action cannot be undone directly, 
+            but the data will be soft-deleted.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} disabled={deleting}>Cancel</Button>
+          <Button onClick={handleDeleteAssessment} color="error" variant="contained" disabled={deleting}>
+            {deleting ? <CircularProgress size={20} /> : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

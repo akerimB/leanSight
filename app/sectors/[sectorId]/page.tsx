@@ -1,19 +1,3 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -41,11 +25,13 @@ interface DescriptorGroup {
 }
 
 interface PageProps {
-  params: Promise<{ sectorId: string }>;
+  params: {
+    sectorId: string;
+  };
 }
 
 export default async function SectorPage({ params }: PageProps) {
-  const { sectorId } = await params;
+  const { sectorId } = params;
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.role !== 'ADMIN') {

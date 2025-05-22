@@ -20,8 +20,12 @@ export const config = {
     '/analytics/:path*',
     '/settings/:path*',
     '/admin/:path*',
+    '/sectors/:path*',
+    '/weighting-schemes/:path*',
     '/api/admin/:path*',
     '/api/companies/:path*',
     '/api/dashboard/:path*',
+    '/api/sectors/:path*',
+    '/api/weighting-schemes/:path*',
   ]
 }; 

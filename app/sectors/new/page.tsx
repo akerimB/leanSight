@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  CircularProgress,
+} from '@mui/material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 export default function NewSectorPage() {
@@ -16,6 +22,10 @@ export default function NewSectorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      toast.error('Sector name is required.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -33,57 +43,75 @@ export default function NewSectorPage() {
       }
 
       toast.success('Sector created successfully');
-
-      router.push('/sectors');
+      router.push('/sectors'); // Redirect to the sectors list page
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create sector');
+      toast.error(error.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Create New Sector</h1>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Button 
+            variant="outlined"
+            onClick={() => router.back()} 
+            startIcon={<ArrowBackIcon />} 
+            sx={{ mr: 2 }}
+          >
+            Back
+          </Button>
+          <Typography variant="h4" component="h1">
+            Create New Sector
+          </Typography>
+        </Box>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Sector Name</Label>
-            <Input
-              id="name"
+        <form onSubmit={handleSubmit}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              label="Sector Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter sector name"
               required
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
+            <TextField
+              label="Description (Optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter a brief description for the sector"
-              rows={3}
+              multiline
+              rows={4}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
             />
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || !name.trim()}>
-              {loading ? 'Creating...' : 'Create Sector'}
-            </Button>
-          </div>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => router.back()}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                disabled={loading || !name.trim()} 
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+              >
+                {loading ? 'Creating...' : 'Create Sector'}
+              </Button>
+            </Box>
+          </Box>
         </form>
-      </div>
-    </div>
+      </Paper>
+    </Container>
   );
 } 

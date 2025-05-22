@@ -1,24 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Plus } from 'lucide-react';
+  Box,
+  Typography,
+  Button,
+  CircularProgress,
+  Alert,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  Container,
+  Paper,
+} from '@mui/material';
+import { Add as AddIcon, Edit as EditIcon, BusinessCenter as BusinessCenterIcon, Description as DescriptionIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface Sector {
   id: string;
   name: string;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    descriptors?: number;
+    companies?: number;
+  };
 }
 
 export default function SectorsPage() {
@@ -31,15 +41,18 @@ export default function SectorsPage() {
   }, []);
 
   const fetchSectors = async () => {
+    setLoading(true);
     try {
       const response = await fetch('/api/sectors');
       if (!response.ok) {
-        throw new Error('Failed to fetch sectors');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch sectors');
       }
       const data = await response.json();
       setSectors(data);
-    } catch (error) {
-      toast.error('Failed to load sectors');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load sectors');
+      setSectors([]); // Ensure sectors is an array even on error
     } finally {
       setLoading(false);
     }
@@ -54,59 +67,90 @@ export default function SectorsPage() {
   };
 
   if (loading) {
-    return <div className="container mx-auto py-10 text-center">Loading...</div>;
+    return (
+      <Container sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>Loading sectors...</Typography>
+      </Container>
+    );
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sectors</h1>
-        <Button onClick={handleCreateSector}>
-          <Plus className="mr-2 h-4 w-4" />
+    <Container sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" component="h1">
+          Sectors
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleCreateSector}
+        >
           New Sector
         </Button>
-      </div>
+      </Box>
 
       {sectors.length === 0 ? (
-        <div className="text-center py-10 border rounded-md">
-          <p className="text-lg text-gray-500">No sectors found.</p>
-          <p className="text-sm text-gray-400 mb-4">Create one to get started.</p>
-          <Button onClick={handleCreateSector}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create New Sector
+        <Paper elevation={3} sx={{ textAlign: 'center', py: 10, px:3, mt: 4, backgroundColor: '#f9f9f9' }}>
+          <BusinessCenterIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h5" component="p" gutterBottom>
+            No Sectors Found
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            Get started by creating a new sector. Define its characteristics and manage maturity descriptors.
+          </Typography>
+          <Button 
+            variant="contained" 
+            size="large"
+            onClick={handleCreateSector} 
+            startIcon={<AddIcon />}
+          >
+            Create First Sector
           </Button>
-        </div>
+        </Paper>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Updated At</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sectors.map((sector) => (
-                <TableRow key={sector.id}>
-                  <TableCell>{sector.name}</TableCell>
-                  <TableCell>{new Date(sector.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{new Date(sector.updatedAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleEditSector(sector.id)}
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Grid container spacing={3}>
+          {sectors.map((sector) => (
+            <Grid item xs={12} sm={6} md={4} key={sector.id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, transition: '0.3s', '&:hover': { boxShadow: 6 } }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography gutterBottom variant="h5" component="h2">
+                    {sector.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: '40px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>
+                    {sector.description || 'No description available.'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <DescriptionIcon color="action" sx={{ mr: 1 }} /> 
+                    <Typography variant="body2">
+                      Maturity Descriptors: {sector._count?.descriptors ?? 0}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <BusinessCenterIcon color="action" sx={{ mr: 1 }} />
+                    <Typography variant="body2">
+                      Companies: {sector._count?.companies ?? 0}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{mt:1}}>
+                    Last updated: {new Date(sector.updatedAt).toLocaleDateString()}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', p:2 }}>
+                  <Button 
+                    size="small" 
+                    startIcon={<EditIcon />}
+                    onClick={() => handleEditSector(sector.id)}
+                    variant="outlined"
+                  >
+                    View Details
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       )}
-    </div>
+    </Container>
   );
 } 

@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, ImportIcon, CheckSquare, Square } from 'lucide-react';
+import { PlusCircle, ImportIcon, CheckSquare, Square, Download } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 
 // Define the structure for a single dimension (fetched for dropdown)
 interface Dimension {
@@ -76,6 +77,16 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
   const [loadingDescriptorsOfSelectedSector, setLoadingDescriptorsOfSelectedSector] = useState(false);
   const [selectedDescriptorIdsToImport, setSelectedDescriptorIdsToImport] = useState<Set<string>>(new Set());
   const [importingDescriptorsLoading, setImportingDescriptorsLoading] = useState(false);
+
+  // State for importing descriptors from JSON
+  const [jsonFile, setJsonFile] = useState<File | null>(null);
+  const [importingFromJsonLoading, setImportingFromJsonLoading] = useState(false);
+
+  // Add new state for editing descriptors
+  const [editingDescriptor, setEditingDescriptor] = useState<Descriptor | null>(null);
+  const [editDescriptorLevel, setEditDescriptorLevel] = useState<number>(1);
+  const [editDescriptorDescription, setEditDescriptorDescription] = useState('');
+  const [editDescriptorLoading, setEditDescriptorLoading] = useState(false);
 
   useEffect(() => {
     setSector(initialSector);
@@ -242,83 +253,293 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
     setImportingDescriptorsLoading(false);
   };
 
-  const renderDescriptorManagement = () => {
-    return (
-      <div className="mt-8 p-6 border rounded-lg shadow-sm">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Manage Maturity Descriptors</h2>
-          <Button variant="outline" onClick={handleOpenImportFromSector}>
-            <ImportIcon className="mr-2 h-4 w-4" /> 
-            Import from Sector
-          </Button>
-        </div>
-        
-        {/* Add New Descriptor Form */}
-        <form onSubmit={handleAddDescriptor} className="mb-8 p-4 border rounded-md bg-gray-50 space-y-4">
-          <h3 className="text-lg font-medium">Add New Descriptor</h3>
-          <div>
-            <Label htmlFor="dimension">Dimension</Label>
-            <Select value={selectedDimensionId} onValueChange={setSelectedDimensionId}>
-              <SelectTrigger id="dimension">
-                <SelectValue placeholder="Select a dimension" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableDimensions.map((dim) => (
-                  <SelectItem key={dim.id} value={dim.id}>
-                    {dim.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="level">Maturity Level (1-5)</Label>
-            <Input 
-              id="level" 
-              type="number" 
-              min={1} 
-              max={5} 
-              value={newDescriptorLevel} 
-              onChange={(e) => setNewDescriptorLevel(parseInt(e.target.value, 10))}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="newDescriptorDescription">Description</Label>
-            <Textarea
-              id="newDescriptorDescription"
-              value={newDescriptorDescription}
-              onChange={(e) => setNewDescriptorDescription(e.target.value)}
-              placeholder="Enter descriptor description"
-              rows={3}
-              required
-            />
-          </div>
-          <Button type="submit" disabled={addDescriptorLoading || !selectedDimensionId || !newDescriptorDescription.trim()}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {addDescriptorLoading ? 'Adding...' : 'Add Descriptor'}
-          </Button>
-        </form>
+  const handleJsonFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setJsonFile(event.target.files[0]);
+    } else {
+      setJsonFile(null);
+    }
+  };
 
-        {/* Existing Descriptors List */}
-        <div>
-            <h3 className="text-lg font-medium mb-3">Existing Descriptors</h3>
-            {sector.descriptors.length > 0 ? (
-            <ul className="space-y-3">
-                {sector.descriptors.map(desc => (
-                <li key={desc.id} className="p-3 border rounded-md shadow-sm bg-white">
-                    <p className="font-semibold">Level {desc.level} - {desc.dimension?.name || 'Unknown Dimension'}</p>
-                    <p className="text-sm text-gray-700">{desc.description}</p>
-                    <div className="mt-2 text-right">
-                        <Button variant="outline" size="sm" className="mr-2" onClick={() => alert('Edit not implemented')} >Edit</Button>
-                        <Button variant="destructive" size="sm" onClick={() => alert('Delete not implemented') } >Delete</Button>
-                    </div>
-                </li>
-                ))}
-            </ul>
-            ) : (
-            <p className="text-gray-500 italic">No descriptors defined for this sector yet.</p>
-            )}
+  const handleDownloadSampleJson = () => {
+    // This will point to the API endpoint that serves the sample JSON
+    window.open('/api/sectors/sample-descriptor-json', '_blank');
+  };
+
+  const handleImportFromJson = async () => {
+    if (!jsonFile) {
+      toast.error("Please select a JSON file to import.");
+      return;
+    }
+    setImportingFromJsonLoading(true);
+    const formData = new FormData();
+    formData.append('file', jsonFile);
+
+    try {
+      // This API endpoint needs to be created
+      const response = await fetch(`/api/sectors/${initialSector.id}/upload-descriptors-json`, {
+        method: 'POST',
+        body: formData, // FormData will set the Content-Type header correctly
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to import descriptors from JSON');
+      }
+      const result = await response.json();
+      toast.success(result.message || 'Descriptors imported successfully from JSON!');
+      setJsonFile(null); // Reset file input
+      router.refresh(); // Refresh data
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to import descriptors from JSON.');
+    } finally {
+      setImportingFromJsonLoading(false);
+    }
+  };
+
+  const handleEditDescriptor = async () => {
+    if (!editingDescriptor) return;
+    setEditDescriptorLoading(true);
+    try {
+      const response = await fetch(`/api/descriptors/${editingDescriptor.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          level: editDescriptorLevel,
+          description: editDescriptorDescription,
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update descriptor');
+      }
+      toast.success('Descriptor updated successfully');
+      setEditingDescriptor(null);
+      router.refresh(); // Refresh data
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update descriptor');
+    } finally {
+      setEditDescriptorLoading(false);
+    }
+  };
+
+  const handleDeleteDescriptor = async (descriptorId: string) => {
+    if (!confirm('Are you sure you want to delete this descriptor?')) return;
+    try {
+      const response = await fetch(`/api/descriptors/${descriptorId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete descriptor');
+      }
+      toast.success('Descriptor deleted successfully');
+      router.refresh(); // Refresh data
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete descriptor');
+    }
+  };
+
+  const openEditDialog = (descriptor: Descriptor) => {
+    setEditingDescriptor(descriptor);
+    setEditDescriptorLevel(descriptor.level);
+    setEditDescriptorDescription(descriptor.description);
+  };
+
+  const renderDescriptorManagement = () => {
+    // Group descriptors by dimension and extract weights
+    const dimensionsMap = sector.descriptors.reduce((acc, desc) => {
+      const dimName = desc.dimension?.name || 'Unknown Dimension';
+      if (!acc[dimName]) {
+        acc[dimName] = { descriptors: [], id: desc.dimension?.id || dimName };
+      }
+      acc[dimName].descriptors.push(desc);
+      return acc;
+    }, {} as Record<string, { id: string, descriptors: Descriptor[] }>);
+
+    const dimensionsArray = Object.entries(dimensionsMap).map(([name, data]) => ({ ...data, name }));
+
+    return (
+      <div className="mt-10">
+        {/* Header with Actions */}
+        <Card className="mb-10 shadow-lg dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+          <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-3 md:space-y-0 py-6 px-7">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Manage Maturity Descriptors</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Add, edit, or import descriptors for this sector.</p>
+            </div>
+            <div className="flex gap-3 shrink-0">
+              <Button 
+                variant="outline" 
+                onClick={handleOpenImportFromSector} 
+                disabled={importingDescriptorsLoading || importingFromJsonLoading}
+                className="bg-white dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm"
+              >
+                <ImportIcon className="mr-2 h-4 w-4" />
+                Import from Sector
+              </Button>
+              <Button variant="outline" onClick={handleDownloadSampleJson} className="bg-white dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download Template
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Forms (col-span-1) */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* Add New Descriptor Form */}
+            <Card className="shadow-lg rounded-xl dark:border-slate-700 dark:bg-slate-800">
+              <CardHeader className="border-b dark:border-slate-700 pb-4 pt-5 px-6">
+                <CardTitle className="text-xl font-semibold text-slate-800 dark:text-slate-100">Add New Descriptor</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddDescriptor} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dimension" className="text-sm font-medium text-slate-700 dark:text-slate-300">Dimension</Label>
+                    <Select value={selectedDimensionId} onValueChange={setSelectedDimensionId}>
+                      <SelectTrigger id="dimension" className="w-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 shadow-sm">
+                        <SelectValue placeholder="Select a dimension" />
+                      </SelectTrigger>
+                      <SelectContent className="dark:bg-slate-800 dark:text-slate-200 border-slate-700 shadow-lg">
+                        {availableDimensions.map((dim) => (
+                          <SelectItem key={dim.id} value={dim.id} className="dark:hover:bg-slate-700 focus:dark:bg-slate-700">
+                            {dim.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="level" className="text-sm font-medium text-slate-700 dark:text-slate-300">Maturity Level (1-5)</Label>
+                    <Input 
+                      id="level" 
+                      type="number" 
+                      min={1} 
+                      max={5} 
+                      value={newDescriptorLevel} 
+                      onChange={(e) => setNewDescriptorLevel(parseInt(e.target.value, 10))}
+                      required
+                      className="w-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="newDescriptorDescription" className="text-sm font-medium text-slate-700 dark:text-slate-300">Description</Label>
+                    <Textarea
+                      id="newDescriptorDescription"
+                      value={newDescriptorDescription}
+                      onChange={(e) => setNewDescriptorDescription(e.target.value)}
+                      placeholder="Enter descriptor description (be specific and clear)"
+                      rows={5}
+                      required
+                      className="w-full resize-none dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 shadow-sm"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full transition-colors duration-150 ease-in-out bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg"
+                    disabled={addDescriptorLoading || !selectedDimensionId || !newDescriptorDescription.trim()}
+                  >
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    {addDescriptorLoading ? 'Adding...' : 'Add Descriptor'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Import from JSON */}
+            <Card className="shadow-lg rounded-xl dark:border-slate-700 dark:bg-slate-800">
+              <CardHeader className="border-b dark:border-slate-700 pb-4 pt-5 px-6">
+                <CardTitle className="text-xl font-semibold text-slate-800 dark:text-slate-100">Import from JSON</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="json-file-input" className="text-sm font-medium text-slate-700 dark:text-slate-300">Upload JSON File</Label>
+                    <Input 
+                      id="json-file-input" 
+                      type="file" 
+                      accept=".json"
+                      onChange={handleJsonFileChange}
+                      className="w-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-slate-300 dark:file:border-slate-500 file:text-sm file:font-medium file:bg-slate-50 dark:file:bg-slate-600 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-slate-100 dark:hover:file:bg-slate-500 shadow-sm"
+                      disabled={importingFromJsonLoading}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleImportFromJson} 
+                    className="w-full transition-colors duration-150 ease-in-out bg-slate-600 hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-600 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg"
+                    disabled={!jsonFile || importingFromJsonLoading || importingDescriptorsLoading}
+                  >
+                    {importingFromJsonLoading ? 'Importing...' : 'Import from JSON'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Existing Descriptors (col-span-2) */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-lg rounded-xl dark:border-slate-700 dark:bg-slate-800">
+              <CardHeader className="border-b dark:border-slate-700 pb-5 pt-6 px-7">
+                <CardTitle className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Current Maturity Descriptors</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {dimensionsArray.length > 0 ? (
+                  <div className="space-y-8">
+                    {dimensionsArray.map(dim => (
+                      <Card key={dim.id} className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <CardHeader className="flex flex-row items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-5 border-b dark:border-slate-600">
+                          <CardTitle className="text-xl font-semibold text-slate-800 dark:text-slate-100">{dim.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-5 bg-white dark:bg-slate-800/30">
+                          {dim.descriptors
+                            .sort((a, b) => a.level - b.level)
+                            .map(desc => (
+                              <div key={desc.id} className="p-5 border border-slate-200/80 dark:border-slate-700/60 rounded-lg bg-slate-50/70 dark:bg-slate-700/30 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <div className="flex justify-between items-center mb-3.5">
+                                  <span 
+                                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wider 
+                                      ${desc.level === 1 ? 'bg-red-100 text-red-700 dark:bg-red-500/80 dark:text-red-50' : ''}
+                                      ${desc.level === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/80 dark:text-orange-50' : ''}
+                                      ${desc.level === 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/80 dark:text-yellow-50' : ''}
+                                      ${desc.level === 4 ? 'bg-green-100 text-green-700 dark:bg-green-500/80 dark:text-green-50' : ''}
+                                      ${desc.level === 5 ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/80 dark:text-blue-50' : ''}
+                                    `}
+                                  >
+                                    LEVEL {desc.level} {/* Uppercase for emphasis */}
+                                  </span>
+                                  <div className="flex gap-2.5">
+                                    <Button variant="outline" size="sm" onClick={() => openEditDialog(desc)} className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 hover:dark:bg-slate-600 transition-colors shadow-sm text-xs px-3 py-1.5 h-auto">
+                                      Edit
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteDescriptor(desc.id)} className="transition-colors shadow-sm text-xs px-3 py-1.5 h-auto">
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </div>
+                                <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed tracking-normal indent-1">
+                                  {desc.description}
+                                </p>
+                              </div>
+                            ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <svg className="mx-auto h-16 w-16 text-slate-400 dark:text-slate-500 opacity-75" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <h3 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">No Descriptors Defined</h3>
+                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Use the forms on the left to add new maturity descriptors or import them.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
@@ -428,6 +649,53 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                 </DialogClose>
               <Button onClick={handleConfirmImportDescriptors} disabled={importingDescriptorsLoading || selectedDescriptorIdsToImport.size === 0}>
                 {importingDescriptorsLoading ? "Importing..." : `Import ${selectedDescriptorIdsToImport.size} Descriptor(s)`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Edit Descriptor Dialog */}
+        <Dialog open={!!editingDescriptor} onOpenChange={() => setEditingDescriptor(null)}>
+          <DialogContent className="sm:max-w-[625px]">
+            <DialogHeader>
+              <DialogTitle>Edit Maturity Descriptor</DialogTitle>
+              <DialogDescription>
+                Update the level and description for this maturity descriptor.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-level">Maturity Level (1-5)</Label>
+                <Input
+                  id="edit-level"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={editDescriptorLevel}
+                  onChange={(e) => setEditDescriptorLevel(parseInt(e.target.value, 10))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editDescriptorDescription}
+                  onChange={(e) => setEditDescriptorDescription(e.target.value)}
+                  rows={4}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button 
+                onClick={handleEditDescriptor} 
+                disabled={editDescriptorLoading || !editDescriptorDescription.trim()}
+              >
+                {editDescriptorLoading ? 'Saving...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </DialogContent>

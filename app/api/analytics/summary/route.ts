@@ -12,46 +12,119 @@ export async function GET(request: Request) {
   const userRole = session.user.role;
   const userCompanyId = session.user.companyId;
 
-  // Parse timeRange param
+  // Parse query params
   const url = new URL(request.url);
   const timeRange = url.searchParams.get('timeRange') || 'last30days';
+  const filterCompanyId = url.searchParams.get('companyId');
+  const filterDepartmentId = url.searchParams.get('departmentId');
+
   const to = new Date();
   let from: Date;
+  let fromPrev: Date; // Start of the previous period
+  let toPrev: Date;   // End of the previous period
+
   switch (timeRange) {
     case 'last7days':
-      from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      from = new Date(Date.now() - sevenDays);
+      toPrev = new Date(from.getTime() - 1); // End of prev period is 1ms before start of current
+      fromPrev = new Date(toPrev.getTime() - sevenDays + 1);
       break;
     case 'last30days':
-      from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      from = new Date(Date.now() - thirtyDays);
+      toPrev = new Date(from.getTime() - 1);
+      fromPrev = new Date(toPrev.getTime() - thirtyDays + 1);
       break;
     case 'last90days':
-      from = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      const ninetyDays = 90 * 24 * 60 * 60 * 1000;
+      from = new Date(Date.now() - ninetyDays);
+      toPrev = new Date(from.getTime() - 1);
+      fromPrev = new Date(toPrev.getTime() - ninetyDays + 1);
       break;
     case 'lastYear':
       from = new Date(new Date().setFullYear(to.getFullYear() - 1));
+      toPrev = new Date(from.getTime() - 1);
+      // For lastYear, the previous period is the year before that.
+      fromPrev = new Date(new Date(toPrev).setFullYear(toPrev.getFullYear() - 1));
+      fromPrev.setDate(fromPrev.getDate() +1); // Adjust to be start of year typically
       break;
-    default:
-      from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    default: // Default to last30days logic
+      const defaultDays = 30 * 24 * 60 * 60 * 1000;
+      from = new Date(Date.now() - defaultDays);
+      toPrev = new Date(from.getTime() - 1);
+      fromPrev = new Date(toPrev.getTime() - defaultDays + 1);
   }
 
   // Filter assessments by date and company (if not admin)
-  const assessmentWhere: any = { createdAt: { gte: from, lte: to } };
-  if (userRole !== Role.ADMIN) {
-    assessmentWhere.companyId = userCompanyId;
+  const assessmentWhereCurrent: any = { createdAt: { gte: from, lte: to } };
+  const assessmentWherePrevious: any = { createdAt: { gte: fromPrev, lte: toPrev } };
+
+  // Apply company filter
+  let effectiveCompanyId = userCompanyId; // Default to user's own company for non-admins
+  if (userRole === Role.ADMIN) {
+    if (filterCompanyId) {
+      effectiveCompanyId = filterCompanyId; // Admin can filter by any company
+    } else {
+      effectiveCompanyId = null; // Admin requesting all companies (no filterCompanyId provided)
+    }
+  }
+  // For non-admins, effectiveCompanyId is already their own. If filterCompanyId is provided but doesn't match, it's ignored.
+  // If an admin wants data for a specific company, they must provide filterCompanyId.
+  // If an admin wants ALL companies, they provide no filterCompanyId (effectiveCompanyId becomes null).
+
+  if (effectiveCompanyId) { // Apply company filter if an effectiveCompanyId is set
+    assessmentWhereCurrent.companyId = effectiveCompanyId;
+    assessmentWherePrevious.companyId = effectiveCompanyId;
+  } else if (userRole !== Role.ADMIN && !effectiveCompanyId) {
+    // This case implies a non-admin user has no companyId, which is problematic.
+    // For safety, prevent data leakage by ensuring they can't fetch anything.
+    assessmentWhereCurrent.companyId = '__NO_COMPANY_ACCESS__'; 
+    assessmentWherePrevious.companyId = '__NO_COMPANY_ACCESS__';
+  }
+  // If userRole is ADMIN and effectiveCompanyId is null, no companyId filter is applied (all companies).
+
+  // Apply department filter (if provided)
+  if (filterDepartmentId) {
+    assessmentWhereCurrent.departmentId = filterDepartmentId;
+    assessmentWherePrevious.departmentId = filterDepartmentId;
   }
 
-  // 1. Fetch scores for overall avg and trends
-  const scores = await prisma.score.findMany({
-    where: { assessment: assessmentWhere },
+  // 1. Fetch scores for overall avg and trends (CURRENT PERIOD)
+  const scoresCurrent = await prisma.score.findMany({
+    where: { assessment: assessmentWhereCurrent },
     select: { level: true, assessment: { select: { createdAt: true, departmentId: true } } }
   });
 
-  const overallAvg = scores.length > 0
-    ? scores.reduce((sum, s) => sum + s.level, 0) / scores.length
+  const overallAvgCurrent = scoresCurrent.length > 0
+    ? scoresCurrent.reduce((sum, s) => sum + s.level, 0) / scoresCurrent.length
     : 0;
 
+  // Fetch scores for PREVIOUS PERIOD overall average
+  const scoresPrevious = await prisma.score.findMany({
+    where: { assessment: assessmentWherePrevious },
+    select: { level: true }
+  });
+
+  const overallAvgPrevious = scoresPrevious.length > 0
+    ? scoresPrevious.reduce((sum, s) => sum + s.level, 0) / scoresPrevious.length
+    : 0;
+
+  // Calculate score distribution for histogram (uses scoresCurrent)
+  const scoreDistributionData: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  scoresCurrent.forEach(score => {
+    if (score.level >= 1 && score.level <= 5) {
+      scoreDistributionData[Math.round(score.level)] = (scoreDistributionData[Math.round(score.level)] || 0) + 1;
+    }
+  });
+  const scoreDistribution = Object.entries(scoreDistributionData).map(([level, count]) => ({
+    level: parseInt(level, 10),
+    count
+  }));
+
+  // Trends map uses scoresCurrent
   const trendsMap: Record<string, { total: number; count: number }> = {};
-  scores.forEach(({ level, assessment }) => {
+  scoresCurrent.forEach(({ level, assessment }) => {
     const dateKey = assessment.createdAt.toISOString().split('T')[0];
     if (!trendsMap[dateKey]) trendsMap[dateKey] = { total: 0, count: 0 };
     trendsMap[dateKey].total += level;
@@ -59,10 +132,10 @@ export async function GET(request: Request) {
   });
   const trends = Object.entries(trendsMap).map(([period, v]) => ({ period, avgScore: v.total / v.count }));
 
-  // 2. Dimension breakdown
+  // Dimension breakdown uses assessmentWhereCurrent
   const dimAvgs = await prisma.score.groupBy({
     by: ['dimensionId'],
-    where: { assessment: assessmentWhere },
+    where: { assessment: assessmentWhereCurrent },
     _avg: { level: true },
   });
   const dimensionIds = dimAvgs.map((d) => d.dimensionId);
@@ -76,7 +149,7 @@ export async function GET(request: Request) {
     avgScore: d._avg.level ?? 0,
   }));
 
-  // 3. Category distribution
+  // Category distribution uses data derived from current period dimensionBreakdown
   const dimsFull = await prisma.dimension.findMany({
     where: { id: { in: dimensionIds } },
     select: {
@@ -99,9 +172,14 @@ export async function GET(request: Request) {
     avgScore: v.total / v.count,
   }));
 
-  // 4. Department comparison
+  // Automated Strengths & Weaknesses (based on Categories)
+  const sortedCategories = [...categoryDistribution].sort((a, b) => b.avgScore - a.avgScore);
+  const topCategories = sortedCategories.slice(0, 3);
+  const weakCategories = sortedCategories.slice(-3).reverse(); // Slice last 3 and reverse to show weakest first if needed, or sort ascendingly before slicing
+
+  // Department comparison uses scoresCurrent
   const deptMap: Record<string, { total: number; count: number }> = {};
-  scores.forEach(({ level, assessment }) => {
+  scoresCurrent.forEach(({ level, assessment }) => {
     const deptId = assessment.departmentId ?? 'Unassigned';
     if (!deptMap[deptId]) deptMap[deptId] = { total: 0, count: 0 };
     deptMap[deptId].total += level;
@@ -118,9 +196,9 @@ export async function GET(request: Request) {
     avgScore: v.total / v.count,
   }));
 
-  // 5. Completion & adoption
+  // Completion & adoption uses assessmentWhereCurrent
   const assessments = await prisma.assessment.findMany({
-    where: assessmentWhere,
+    where: assessmentWhereCurrent,
     select: { status: true, createdAt: true, updatedAt: true, expertId: true },
   });
   const started = assessments.length;
@@ -129,17 +207,25 @@ export async function GET(request: Request) {
   const reviewedAss = assessments.filter((a) => a.status === AssessmentStatus.REVIEWED);
   const totalTime = reviewedAss.reduce((sum, a) => sum + (a.updatedAt.getTime() - a.createdAt.getTime()), 0);
   const avgTimeToComplete = reviewedAss.length > 0 ? totalTime / reviewedAss.length : 0;
-  const activeUsersMap: Record<string, Set<string>> = {};
-  assessments.forEach((a) => {
-    const dateKey = a.createdAt.toISOString().split('T')[0];
-    if (!activeUsersMap[dateKey]) activeUsersMap[dateKey] = new Set();
-    activeUsersMap[dateKey].add(a.expertId);
+
+  // New user engagement metrics
+  const distinctExpertIds = new Set(assessments.map(a => a.expertId));
+  const numberOfActiveUsers = distinctExpertIds.size;
+  const avgAssessmentsPerUser = numberOfActiveUsers > 0 ? assessments.length / numberOfActiveUsers : 0;
+
+  // Assessment Status Distribution
+  const statusCounts: { [key in AssessmentStatus]?: number } = {};
+  assessments.forEach(assessment => {
+    statusCounts[assessment.status] = (statusCounts[assessment.status] || 0) + 1;
   });
-  const activeUsers = Object.entries(activeUsersMap).map(([period, set]) => ({ period, count: set.size }));
+  const assessmentStatusDistribution = Object.entries(statusCounts).map(([status, count]) => ({
+    name: status, // Recharts PieChart often uses 'name' for labels
+    value: count as number // and 'value' for the data point
+  }));
 
   // 6. Benchmarking (global vs. company)
   const globalScores = await prisma.score.findMany({
-    where: { assessment: { createdAt: { gte: from, lte: to } } },
+    where: { assessment: { createdAt: { gte: from, lte: to } } }, // Stays for global current
     select: { level: true },
   });
   const globalAvg = globalScores.length
@@ -148,9 +234,9 @@ export async function GET(request: Request) {
 
   // Compute company average (fallback to global if no companyId)
   let companyAvg: number;
-  if (userCompanyId) {
+  if (effectiveCompanyId) {
     const companyScores = await prisma.score.findMany({
-      where: { assessment: { createdAt: { gte: from, lte: to }, companyId: userCompanyId } },
+      where: { assessment: { createdAt: { gte: from, lte: to }, companyId: effectiveCompanyId } },
       select: { level: true },
     });
     companyAvg = companyScores.length
@@ -161,10 +247,10 @@ export async function GET(request: Request) {
   }
   const benchmark = { globalAvg, companyAvg };
 
-  // 7. Evidence counts per dimension
+  // 7. Evidence counts use assessmentWhereCurrent
   const evGroup = await prisma.evidence.groupBy({
     by: ['dimensionId'],
-    where: { uploadedAt: { gte: from, lte: to }, assessment: assessmentWhere },
+    where: { uploadedAt: { gte: from, lte: to }, assessment: assessmentWhereCurrent },
     _count: { id: true },
   });
   const evidenceCounts = evGroup.map((e) => ({
@@ -173,7 +259,8 @@ export async function GET(request: Request) {
     count: e._count.id,
   }));
 
-  // 8. Cohort analysis by expert's first assessment quarter
+  // 8. Cohort analysis uses assessments from current period for expertFirst identification
+  // cohortAssessmentWhere also uses current from, to
   const expertFirst: Record<string, Date> = {};
   assessments.forEach((a) => {
     if (!expertFirst[a.expertId] || a.createdAt < expertFirst[a.expertId]) {
@@ -183,8 +270,8 @@ export async function GET(request: Request) {
   const expertIds = Object.keys(expertFirst);
   // Build assessment filter for cohort
   const cohortAssessmentWhere: any = { createdAt: { gte: from, lte: to }, expertId: { in: expertIds } };
-  if (assessmentWhere.companyId) {
-    cohortAssessmentWhere.companyId = assessmentWhere.companyId;
+  if (effectiveCompanyId) {
+    cohortAssessmentWhere.companyId = effectiveCompanyId;
   }
   const cohortScores = await prisma.score.findMany({
     where: { assessment: cohortAssessmentWhere },
@@ -203,9 +290,9 @@ export async function GET(request: Request) {
   });
   const cohort = Object.entries(cohortMap).map(([cohort, v]) => ({ cohort, avgScore: v.total / v.count }));
 
-  // 9. Heatmap: department × category averages
+  // 9. Heatmap uses assessmentWhereCurrent
   const heatRaw = await prisma.score.findMany({
-    where: { assessment: assessmentWhere },
+    where: { assessment: assessmentWhereCurrent },
     select: {
       level: true,
       assessment: { select: { departmentId: true } },
@@ -242,13 +329,21 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    overallAvg,
+    overallAvg: { current: overallAvgCurrent, previous: overallAvgPrevious },
     trends,
+    scoreDistribution,
     dimensionBreakdown,
     categoryDistribution,
     departmentComparison,
-    completion: { started, submitted, reviewed, avgTimeToComplete },
-    activeUsers,
+    completion: {
+      started,
+      submitted,
+      reviewed,
+      avgTimeToComplete,
+      numberOfActiveUsers,
+      avgAssessmentsPerUser
+    },
+    assessmentStatusDistribution,
     benchmark,
     evidenceCounts,
     cohort,

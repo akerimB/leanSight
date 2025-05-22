@@ -53,57 +53,60 @@ model Department {
   company     Company      @relation(fields: [companyId], references: [id])
   assessments Assessment[]
   deletedAt   DateTime?    // Soft delete
+
+  @@unique([companyId, name])
 }
 
 model Sector {
-  id          String               @id @default(uuid())
-  name        String               @unique
-  companies   Company[]
-  descriptors MaturityDescriptor[]
-  deletedDescriptors DeletedMaturityDescriptor[]
-  deletedAt   DateTime?            // Soft delete
+  id                             String                        @id @default(uuid())
+  name                           String                        @unique
+  description                    String?
+  companies                      Company[]
+  descriptors                    MaturityDescriptor[]
+  deletedDescriptors             DeletedMaturityDescriptor[]
+  deletedAt                      DateTime?                     // Soft delete
 }
 
 model Assessment {
-  id           String           @id @default(uuid())
-  companyId    String
-  departmentId String?
-  expertId     String
-  status       AssessmentStatus
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  deletedAt    DateTime?        // Soft delete
-  scores       Score[]
-  evidence     Evidence[]
-  company      Company          @relation(fields: [companyId], references: [id])
-  department   Department?      @relation(fields: [departmentId], references: [id])
-  expert       User             @relation("ExpertAssessment", fields: [expertId], references: [id])
+  id                String           @id @default(uuid())
+  companyId         String
+  departmentId      String?
+  expertId          String
+  status            AssessmentStatus
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?        // Soft delete
+  scores            Score[]
+  evidence          Evidence[]
+  company           Company          @relation(fields: [companyId], references: [id])
+  department        Department?      @relation(fields: [departmentId], references: [id])
+  expert            User             @relation("ExpertAssessment", fields: [expertId], references: [id])
   weightingSchemeId String?
   weightingScheme   WeightingScheme? @relation(fields: [weightingSchemeId], references: [id])
 }
 
 model Category {
-  id          String      @id @default(uuid())
-  name        String      @unique
-  description String?
-  dimensions  Dimension[]
+  id                 String           @id @default(uuid())
+  name               String           @unique
+  description        String?
+  dimensions         Dimension[]      // Relation to Dimensions
   categoryWeightings CategoryWeight[]
-  deletedAt   DateTime?   // Soft delete
+  deletedAt          DateTime?        // Soft delete
 }
 
 model Dimension {
-  id              String               @id @default(uuid())
-  name            String
-  description     String
-  categoryId      String
-  category        Category             @relation(fields: [categoryId], references: [id])
-  descriptors     MaturityDescriptor[]
-  deletedDescriptors DeletedMaturityDescriptor[]
-  scores          Score[]
-  evidence        Evidence[]
-  templateConfigs TemplateConfig[]
-  dimensionWeightings DimensionWeight[]
-  deletedAt        DateTime?           // Soft delete
+  id                             String                        @id @default(uuid())
+  name                           String                        @unique // Name is unique
+  description                    String?                       // Description is optional
+  categoryId                     String?                       // categoryId is optional
+  category                       Category?                     @relation(fields: [categoryId], references: [id]) // Relation is optional
+  descriptors                    MaturityDescriptor[]
+  deletedDescriptors             DeletedMaturityDescriptor[]
+  scores                         Score[]
+  evidence                       Evidence[]
+  templateConfigs                TemplateConfig[]
+  dimensionWeights               DimensionWeight[]             // Added missing back-relation
+  deletedAt                      DateTime?                     // Soft delete
 }
 
 model MaturityDescriptor {
@@ -117,6 +120,7 @@ model MaturityDescriptor {
   deletedAt   DateTime? // Soft delete
 
   @@index([deletedAt])
+  @@unique([dimensionId, sectorId, level]) // Added unique constraint for data integrity
 }
 
 model DeletedMaturityDescriptor {
@@ -164,12 +168,12 @@ model Evidence {
 }
 
 model TemplateConfig {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   companyId   String
   dimensionId String
-  enabled     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  enabled     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime? // Soft delete
 
   company   Company   @relation(fields: [companyId], references: [id])
@@ -179,30 +183,26 @@ model TemplateConfig {
 }
 
 model WeightingScheme {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  description String?
-  isDefault   Boolean   @default(false)
-  deletedAt   DateTime? // Soft delete
-
-  categoryWeights CategoryWeight[]
-  assessments     Assessment[] // Assessments using this scheme
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String           @id @default(uuid())
+  name              String           @unique
+  description       String?
+  isDefault         Boolean          @default(false)
+  deletedAt         DateTime?        // Soft delete
+  categoryWeights   CategoryWeight[]
+  assessments       Assessment[]     // Assessments using this scheme
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model CategoryWeight {
-  id                String   @id @default(uuid())
-  weight            Float    // Weight for this category within the overall scheme
+  id                String            @id @default(uuid())
+  weight            Float             // Weight for this category within the overall scheme
   categoryId        String
-  category          Category @relation(fields: [categoryId], references: [id])
+  category          Category          @relation(fields: [categoryId], references: [id])
   weightingSchemeId String
-  weightingScheme   WeightingScheme @relation(fields: [weightingSchemeId], references: [id])
-
-  dimensionWeights  DimensionWeight[] // Optional: Specific weights for dimensions within this category
-
-  deletedAt         DateTime? // Soft delete
+  weightingScheme   WeightingScheme   @relation(fields: [weightingSchemeId], references: [id])
+  dimensionWeights  DimensionWeight[] // Specific weights for dimensions within this category
+  deletedAt         DateTime?         // Soft delete
 
   @@unique([categoryId, weightingSchemeId])
 }
@@ -218,3 +218,18 @@ model DimensionWeight {
 
   @@unique([dimensionId, categoryWeightId])
 }
+
+// NEW MODEL for sector-specific dimension weights
+// model DimensionWeightInSector {
+//   id          String    @id @default(cuid())
+//   weight      Float     // e.g., 0.2 for 20%
+//   dimension   Dimension @relation(fields: [dimensionId], references: [id])
+//   dimensionId String
+//   sector      Sector    @relation(fields: [sectorId], references: [id])
+//   sectorId    String
+//   createdAt   DateTime  @default(now())
+//   updatedAt   DateTime  @updatedAt
+//   deletedAt   DateTime? // Soft delete
+// 
+//   @@unique([dimensionId, sectorId])
+// }
