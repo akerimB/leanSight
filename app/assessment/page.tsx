@@ -72,7 +72,7 @@ interface Category {
 interface WeightingSchemeBasic {
   id: string;
   name: string;
-  // Add other fields if needed for display, e.g., isDefault
+  isDefault?: boolean;
 }
 
 const steps = ['Select Company, Department & Scheme', 'Assessment Questions', 'Review & Submit'];
@@ -153,7 +153,14 @@ export default function AssessmentPage() {
       setLoadingWeightingSchemes(true);
       fetch('/api/weighting-schemes', { credentials: 'include' })
         .then(res => res.ok ? res.json() : Promise.reject('Failed to load weighting schemes'))
-        .then(data => setAvailableWeightingSchemes(data || []))
+        .then((data: WeightingSchemeBasic[]) => {
+          setAvailableWeightingSchemes(data || []);
+          // Pre-select the default scheme if one exists and none is selected yet
+          const defaultScheme = data?.find(s => s.isDefault);
+          if (defaultScheme && !selectedWeightingSchemeId) {
+            setSelectedWeightingSchemeId(defaultScheme.id);
+          }
+        })
         .catch(err => {
           console.error('Error fetching weighting schemes:', err);
           toast.error('Failed to load weighting schemes for selection.');
@@ -437,10 +444,10 @@ export default function AssessmentPage() {
                   label="Weighting Scheme (Optional)"
                   onChange={(e: SelectChangeEvent<string>) => setSelectedWeightingSchemeId(e.target.value)}
                 >
-                  <MenuItem value=""><em>None (Results will use even weights or a default)</em></MenuItem>
+                  <MenuItem value=""><em>None (Results will use even weights)</em></MenuItem>
                   {availableWeightingSchemes.map((scheme) => (
                     <MenuItem key={scheme.id} value={scheme.id}>
-                      {scheme.name}
+                      {scheme.name}{scheme.isDefault ? ' (Default)' : ''}
                     </MenuItem>
                   ))}
                 </Select>

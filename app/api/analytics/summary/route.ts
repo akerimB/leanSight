@@ -149,6 +149,23 @@ export async function GET(request: Request) {
     avgScore: d._avg.level ?? 0,
   }));
 
+  // Calculate Dimension Breakdown for the PREVIOUS period
+  const dimAvgsPrevious = await prisma.score.groupBy({
+    by: ['dimensionId'],
+    where: { assessment: assessmentWherePrevious }, // Use previous period's assessment filter
+    _avg: { level: true },
+  });
+  const dimensionIdsPrevious = dimAvgsPrevious.map((d) => d.dimensionId);
+  const dimensionsPrevious = await prisma.dimension.findMany({
+    where: { id: { in: dimensionIdsPrevious } },
+    select: { id: true, name: true },
+  });
+  const dimensionBreakdownPrevious = dimAvgsPrevious.map((d) => ({
+    dimensionId: d.dimensionId,
+    dimensionName: dimensionsPrevious.find((dm) => dm.id === d.dimensionId)?.name || '',
+    avgScore: d._avg.level ?? 0,
+  }));
+
   // Category distribution uses data derived from current period dimensionBreakdown
   const dimsFull = await prisma.dimension.findMany({
     where: { id: { in: dimensionIds } },
@@ -175,7 +192,12 @@ export async function GET(request: Request) {
   // Automated Strengths & Weaknesses (based on Categories)
   const sortedCategories = [...categoryDistribution].sort((a, b) => b.avgScore - a.avgScore);
   const topCategories = sortedCategories.slice(0, 3);
-  const weakCategories = sortedCategories.slice(-3).reverse(); // Slice last 3 and reverse to show weakest first if needed, or sort ascendingly before slicing
+  const weakCategories = sortedCategories.slice(-3).reverse();
+
+  // Automated Strengths & Weaknesses (based on Dimensions)
+  const sortedDimensions = [...dimensionBreakdown].sort((a, b) => b.avgScore - a.avgScore);
+  const topDimensions = sortedDimensions.slice(0, 3);
+  const weakDimensions = sortedDimensions.slice(-3).reverse();
 
   // Department comparison uses scoresCurrent
   const deptMap: Record<string, { total: number; count: number }> = {};
@@ -333,6 +355,7 @@ export async function GET(request: Request) {
     trends,
     scoreDistribution,
     dimensionBreakdown,
+    dimensionBreakdownPrevious,
     categoryDistribution,
     departmentComparison,
     completion: {
@@ -348,5 +371,9 @@ export async function GET(request: Request) {
     evidenceCounts,
     cohort,
     heatmap,
+    topCategories,
+    weakCategories,
+    topDimensions,
+    weakDimensions,
   });
 } 

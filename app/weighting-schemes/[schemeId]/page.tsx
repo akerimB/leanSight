@@ -1,271 +1,177 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
   Typography,
+  Box,
   Paper,
-  Button,
-  TextField,
-  Slider,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Grid,
+  Chip
 } from '@mui/material';
-import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-interface Category {
-  id: string;
-  name: string;
-  dimensions: Dimension[];
-}
-
-interface Dimension {
-  id: string;
-  name: string;
-}
-
-interface CategoryWeight {
+interface DimensionWeightDetails {
   id: string;
   weight: number;
-  categoryId: string;
-  category: Category;
-  dimensionWeights: DimensionWeight[];
+  dimension: { id: string; name: string };
 }
 
-interface DimensionWeight {
+interface CategoryWeightDetails {
   id: string;
   weight: number;
-  dimensionId: string;
-  dimension: Dimension;
+  category: { id: string; name: string };
+  dimensionWeights: DimensionWeightDetails[];
 }
 
-interface WeightingScheme {
+interface WeightingSchemeDetails {
   id: string;
   name: string;
   description: string | null;
   isDefault: boolean;
-  categoryWeights: CategoryWeight[];
+  categoryWeights: CategoryWeightDetails[];
+  // company?: {id: string; name: string} | null; // If company-specific schemes are implemented
 }
 
-export default function EditWeightingSchemePage() {
-  const { schemeId } = useParams() as { schemeId: string };
+export default function WeightingSchemeDetailPage() {
   const router = useRouter();
-  const [scheme, setScheme] = useState<WeightingScheme | null>(null);
+  const params = useParams();
+  const schemeId = params?.schemeId as string;
+
+  const [scheme, setScheme] = useState<WeightingSchemeDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [weights, setWeights] = useState<{
-    [categoryId: string]: {
-      weight: number;
-      dimensions: { [dimensionId: string]: number };
-    };
-  }>({});
 
-  useEffect(() => {
-    fetchScheme();
-  }, [schemeId]);
-
-  const fetchScheme = async () => {
+  const fetchSchemeDetails = useCallback(async () => {
+    if (!schemeId) {
+      setError('Scheme ID not found in URL.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/weighting-schemes/${schemeId}`);
-      if (!response.ok) throw new Error('Failed to fetch weighting scheme');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch weighting scheme details');
+      }
       const data = await response.json();
       setScheme(data);
-      
-      // Initialize weights state
-      const initialWeights: any = {};
-      data.categoryWeights.forEach((cw: CategoryWeight) => {
-        initialWeights[cw.category.id] = {
-          weight: cw.weight,
-          dimensions: {},
-        };
-        cw.dimensionWeights.forEach((dw: DimensionWeight) => {
-          initialWeights[cw.category.id].dimensions[dw.dimension.id] = dw.weight;
-        });
-      });
-      setWeights(initialWeights);
-    } catch (error) {
-      setError('Failed to load weighting scheme');
-      toast.error('Failed to load weighting scheme');
+    } catch (err: any) {
+      console.error('Failed to fetch scheme details:', err);
+      setError(err.message || 'An unexpected error occurred.');
+      toast.error(err.message || 'Failed to load scheme details.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [schemeId]);
 
-  const handleCategoryWeightChange = (categoryId: string, newValue: number) => {
-    setWeights(prev => ({
-      ...prev,
-      [categoryId]: {
-        ...prev[categoryId],
-        weight: newValue,
-      },
-    }));
-  };
-
-  const handleDimensionWeightChange = (categoryId: string, dimensionId: string, newValue: number) => {
-    setWeights(prev => ({
-      ...prev,
-      [categoryId]: {
-        ...prev[categoryId],
-        dimensions: {
-          ...prev[categoryId].dimensions,
-          [dimensionId]: newValue,
-        },
-      },
-    }));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // Validate that category weights sum to 1
-      const categorySum = Object.values(weights).reduce((sum, cat) => sum + cat.weight, 0);
-      if (Math.abs(categorySum - 1) > 0.01) {
-        toast.error('Category weights must sum to 1');
-        return;
-      }
-
-      // Validate that dimension weights within each category sum to 1
-      for (const categoryId in weights) {
-        const dimensionSum = Object.values(weights[categoryId].dimensions).reduce((sum, weight) => sum + weight, 0);
-        if (Math.abs(dimensionSum - 1) > 0.01) {
-          toast.error(`Dimension weights in category must sum to 1`);
-          return;
-        }
-      }
-
-      // Update weights
-      const response = await fetch(`/api/weighting-schemes/${schemeId}/weights`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weights }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update weights');
-      
-      toast.success('Weights updated successfully');
-      router.push('/weighting-schemes');
-    } catch (error) {
-      toast.error('Failed to update weights');
-    } finally {
-      setSaving(false);
+  useEffect(() => {
+    if (schemeId) {
+      fetchSchemeDetails();
     }
-  };
+  }, [schemeId, fetchSchemeDetails]);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 200px)' }}>
         <CircularProgress />
       </Box>
     );
   }
 
-  if (error || !scheme) {
+  if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Failed to load weighting scheme'}</Alert>
+        <Alert severity="error" action={schemeId ? <Button onClick={fetchSchemeDetails}>Retry</Button> : undefined}>
+          {error}
+        </Alert>
+        <Button onClick={() => router.push('/weighting-schemes')} sx={{ mt: 2 }}>
+          &larr; Back to Schemes List
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!scheme) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="info">Weighting scheme data could not be loaded or found.</Alert>
+        <Button onClick={() => router.push('/weighting-schemes')} sx={{ mt: 2 }}>
+          &larr; Back to Schemes List
+        </Button>
       </Box>
     );
   }
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => router.push('/weighting-schemes')} sx={{ mr: 2 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Edit Weights: {scheme.name}
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </Box>
-
-      {scheme.categoryWeights.map((categoryWeight) => (
-        <Paper key={categoryWeight.category.id} sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              {categoryWeight.category.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Category Weight (0-1)
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Slider
-                value={weights[categoryWeight.category.id]?.weight || 0}
-                onChange={(_, value) => handleCategoryWeightChange(categoryWeight.category.id, value as number)}
-                min={0}
-                max={1}
-                step={0.01}
-                sx={{ flexGrow: 1 }}
-              />
-              <TextField
-                value={weights[categoryWeight.category.id]?.weight.toFixed(2) || '0.00'}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value >= 0 && value <= 1) {
-                    handleCategoryWeightChange(categoryWeight.category.id, value);
-                  }
-                }}
-                type="number"
-                inputProps={{ min: 0, max: 1, step: 0.01 }}
-                sx={{ width: 100 }}
-              />
-            </Box>
-          </Box>
-
-          <Typography variant="subtitle1" gutterBottom>
-            Dimension Weights
+      <Button onClick={() => router.push('/weighting-schemes')} sx={{ mb: 2 }}>
+        &larr; Back to Schemes List
+      </Button>
+      <Paper sx={{ p: 3 }}>
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item={true} xs={12} sm={9}>
+                <Typography variant="h4" gutterBottom>
+                {scheme.name}
+                </Typography>
+            </Grid>
+            <Grid item={true} xs={12} sm={3} sx={{textAlign: {sm: 'right'}}}>
+                {scheme.isDefault && <Chip label="Default Scheme" color="primary" />}
+            </Grid>
+        </Grid>
+        
+        {scheme.description && (
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            {scheme.description}
           </Typography>
-          {categoryWeight.dimensionWeights.map((dimensionWeight) => (
-            <Box key={dimensionWeight.dimension.id} sx={{ mb: 2 }}>
-              <Typography variant="body2" gutterBottom>
-                {dimensionWeight.dimension.name}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Slider
-                  value={weights[categoryWeight.category.id]?.dimensions[dimensionWeight.dimension.id] || 0}
-                  onChange={(_, value) => handleDimensionWeightChange(
-                    categoryWeight.category.id,
-                    dimensionWeight.dimension.id,
-                    value as number
-                  )}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  sx={{ flexGrow: 1 }}
+        )}
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
+          Category & Dimension Weights
+        </Typography>
+
+        {scheme.categoryWeights.length === 0 && (
+          <Typography sx={{my: 2}}>No categories and dimensions are currently weighted for this scheme.</Typography>
+        )}
+
+        <List disablePadding>
+          {scheme.categoryWeights.map((cw) => (
+            <React.Fragment key={cw.id}>
+              <ListItem sx={{ py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: {xs: 'column', sm: 'row'} }}>
+                <ListItemText 
+                  primary={cw.category.name}
+                  secondary={`Category Weight: ${(cw.weight * 100).toFixed(1)}%`}
+                  primaryTypographyProps={{variant: 'h6'}}
+                  sx={{mb: {xs: 1, sm: 0}}}
                 />
-                <TextField
-                  value={weights[categoryWeight.category.id]?.dimensions[dimensionWeight.dimension.id]?.toFixed(2) || '0.00'}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    if (!isNaN(value) && value >= 0 && value <= 1) {
-                      handleDimensionWeightChange(
-                        categoryWeight.category.id,
-                        dimensionWeight.dimension.id,
-                        value
-                      );
-                    }
-                  }}
-                  type="number"
-                  inputProps={{ min: 0, max: 1, step: 0.01 }}
-                  sx={{ width: 100 }}
-                />
-              </Box>
-            </Box>
+              </ListItem>
+              {cw.dimensionWeights.length > 0 && (
+                <List disablePadding sx={{ pl: 4, backgroundColor: 'rgba(0,0,0,0.02)', borderLeft: '2px solid', borderColor: 'divider' }}>
+                  {cw.dimensionWeights.map((dw) => (
+                    <ListItem key={dw.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                      <ListItemText 
+                        primary={dw.dimension.name} 
+                        secondary={`Weight within category: ${(dw.weight * 100).toFixed(1)}%`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+              <Divider component="li" />
+            </React.Fragment>
           ))}
-        </Paper>
-      ))}
+        </List>
+      </Paper>
     </Box>
   );
 } 

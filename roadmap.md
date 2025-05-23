@@ -15,10 +15,15 @@ This document outlines planned and suggested improvements for the Analytics Page
 
 - [x] **Group Analytics**: Introduce Tabs or clearly defined sections to organize the numerous charts and improve navigability (e.g., Overview, Performance Breakdown, Engagement).
 - [ ] **Dedicated Assessment Results Page (`/results`)**:
-    - [x] Display list of submitted assessments with key details (Company, Department, Date, Status, Overall Score if pre-calculated). *(Overall Score TBD)*
+    - [x] Display list of submitted assessments with key details (Company, Department, Date, Status, Raw Average Score). *(Decision: List shows raw average for performance; details page shows weighted score)*
     - [x] Allow viewing detailed scores for each dimension within a selected assessment (shows dimension name).
     - [x] Show the weighting scheme applied (if any). *(Influence/calculated scores TBD)*
     - [x] Link to broader analytics where relevant (general link added).
+- [x] **Maturity Score Overview (New Section on `/results/[assessmentId]`)**:
+    - [x] Display the calculated overall maturity score for the specific assessment.
+    - [x] Ensure the calculation considers the applied weighting scheme (if any).
+    - [x] Backend: Add logic to `/api/assessments` (GET single assessment) to calculate/retrieve the weighted maturity score.
+    - [x] Frontend: Fetch and display this score on the `/results/[assessmentId]` page.
 
 ## Phase 3: Deeper Insights & Interactivity
 
@@ -33,12 +38,10 @@ This document outlines planned and suggested improvements for the Analytics Page
     - [x] Average number of assessments per user.
     - [x] Distribution of scores (e.g., a histogram showing how many assessments scored low, medium, high). *(Implemented for individual dimension scores)*
 - [x] **Trend Indicators**: Visually indicate if key metrics are trending up or down compared to the previous period. *(Implemented for Overall Maturity Score, shows delta)*
-- [x] **Improvement Over Time (Delta)**:
-    - [x] For key metrics (Overall Maturity, Dimension Scores), show the change (e.g., "+0.5") compared to the previous period. *(Delta for Overall Maturity Score implemented as part of Trend Indicator; Dimension Scores TBD)*
+- [ ] **Improvement Over Time (Delta)**:
+    - [ ] For key metrics (Overall Maturity, Dimension Scores), show the change (e.g., "+0.5") compared to the previous period. *(Delta for Overall Maturity Score implemented as part of Trend Indicator; Dimension Scores backend done, frontend TBD)*
 - [ ] **Automated Strengths & Weaknesses**:
-    - [ ] Highlight the top 3 strongest and weakest dimensions/categories based on scores.
-- [x] **Automated Strengths & Weaknesses**:
-    - [x] Highlight the top 3 strongest and weakest dimensions/categories based on scores. *(Implemented for categories)*
+    - [x] Highlight the top 3 strongest and weakest dimensions/categories based on scores. *(Implemented for categories and dimensions)*
 - [x] **Assessment Status Breakdown Chart**:
     - [x] Display a pie or bar chart showing the distribution of assessment statuses (Draft, Submitted, Reviewed) for the selected period. *(Pie chart implemented)*
 
@@ -47,7 +50,7 @@ This document outlines planned and suggested improvements for the Analytics Page
 - [ ] **Consider a "Compare Mode"** to select two different time periods, companies, or departments for side-by-side analytics.
 - [ ] **Export/Download Capabilities**:
     - [x] Add functionality to download chart data (e.g., as CSV). *(Implemented for Maturity Trend chart)*
-    - [ ] Allow exporting charts as images (PNG/JPEG).
+    - [x] Allow exporting charts as images (PNG/JPEG). *(Implemented for Maturity Trend chart via ChartCard enhancement)*
 - [ ] **Help/Info Icons**:
     - [x] Add small info icons next to chart titles or complex metrics. On hover/click, these would explain what the chart/metric represents and how it's calculated. *(Implemented for Overall Score and one ChartCard title)*
 
@@ -65,10 +68,15 @@ This document outlines planned and suggested improvements for the Analytics Page
 ## Utility & Setup Features (Supporting Analytics & Assessments)
 
 - [ ] **Weighting Schemes Management (`/weighting-schemes`)**:
-    - [ ] CRUD interface for creating, reading, updating, and deleting weighting schemes.
-    - [ ] Allow definition of weights for categories and their constituent dimensions.
-    - [ ] Functionality to set a company-wide or global default weighting scheme.
-    - [ ] UI to associate specific weighting schemes with assessments (during creation or update). 
+    - [x] CRUD interface for creating, reading, updating, and deleting weighting schemes. *(Read/List, Create, View Details, Delete implemented. Edit page for basic fields structure exists. Backend for Create auto-populates initial weights; Backend for Delete performs soft-delete & prevents default deletion.)*
+    - [x] Allow definition of weights for categories and their constituent dimensions. *(UI and Backend for editing weights implemented, including validation for sums)*
+    - [x] Functionality to set a company-wide or global default weighting scheme. *(Handled via `isDefault` flag in CRUD operations; backend ensures only one default)*
+    - [x] UI to associate specific weighting schemes with assessments (during creation or update). *(Implemented: dropdown on assessment creation page, pre-selects default, passes ID to backend. Existing assessments can also have scheme updated by Admin/Expert on their detail page)*
+
+## Sectors
+    - [ ] **copy maturity level descriptions from other sectors problem
+        -[ ] related button works but the sector list do not appear, so copy of maturity level descriptions is not avaialble.
+
 
 ## Settings menu
 - [ ] **Settings need to be active for users change and see.

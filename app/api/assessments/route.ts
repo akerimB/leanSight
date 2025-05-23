@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { Role, AssessmentStatus } from '@prisma/client';
+import { Role, AssessmentStatus, Score, WeightingScheme, CategoryWeight, DimensionWeight, Dimension, Category } from '@prisma/client';
 import { z } from 'zod';
 
 // Zod schema for PUT request validation
@@ -15,6 +15,103 @@ const updateAssessmentSchema = z.object({
   status: z.nativeEnum(AssessmentStatus).optional(),
   weightingSchemeId: z.string().uuid().nullable().optional(), // Allow string UUID or null
 });
+
+// Helper function to calculate weighted score
+interface ExtendedDimensionWeight extends DimensionWeight {
+  dimension: Dimension;
+}
+
+interface ExtendedCategoryWeight extends CategoryWeight {
+  category: Category;
+  dimensionWeights: ExtendedDimensionWeight[];
+}
+
+interface ExtendedWeightingScheme extends WeightingScheme {
+  categoryWeights: ExtendedCategoryWeight[];
+}
+
+interface ScoreWithDimension extends Score {
+  dimension: { name: string, categoryId?: string }; // categoryId is optional if not directly on dimension
+}
+
+function calculateWeightedScore(
+  scores: ScoreWithDimension[],
+  weightingScheme: ExtendedWeightingScheme | null
+): { weightedAverageScore: number | null; calculationUsed: 'weighted' | 'raw_average' | 'no_scores' } {
+  if (!scores || scores.length === 0) {
+    return { weightedAverageScore: null, calculationUsed: 'no_scores' };
+  }
+
+  // Calculate raw average as a fallback or default
+  const rawTotalScore = scores.reduce((sum, score) => sum + score.level, 0);
+  const rawAverage = scores.length > 0 ? rawTotalScore / scores.length : null;
+
+  if (!weightingScheme || !weightingScheme.categoryWeights || weightingScheme.categoryWeights.length === 0) {
+    return { weightedAverageScore: rawAverage, calculationUsed: 'raw_average' };
+  }
+
+  let totalWeightedScore = 0;
+  let totalWeightSum = 0;
+
+  // Create a map for easy lookup of scores by dimensionId
+  const scoresMap = new Map(scores.map(s => [s.dimensionId, s.level]));
+
+  for (const cw of weightingScheme.categoryWeights) {
+    let categoryWeightedScoreSum = 0;
+    let categoryDimensionWeightSum = 0;
+    let categoryHasScoredDimension = false;
+
+    if (cw.dimensionWeights && cw.dimensionWeights.length > 0) {
+      for (const dw of cw.dimensionWeights) {
+        const scoreLevel = scoresMap.get(dw.dimensionId);
+        if (scoreLevel !== undefined) {
+          categoryWeightedScoreSum += scoreLevel * dw.weight;
+          categoryDimensionWeightSum += dw.weight;
+          categoryHasScoredDimension = true;
+        }
+      }
+    } else {
+      // If a category has a weight but no specific dimension weights, average its dimensions directly
+      // This requires knowing which dimensions belong to this category from the scores.
+      // This part assumes `scores.dimension.categoryId` is available or dimensions are pre-fetched with category info.
+      const dimensionsInCategory = scores.filter(s => s.dimension.categoryId === cw.categoryId);
+      if (dimensionsInCategory.length > 0) {
+        const categoryRawTotal = dimensionsInCategory.reduce((sum, s) => sum + s.level, 0);
+        const categoryRawAverage = categoryRawTotal / dimensionsInCategory.length;
+        
+        categoryWeightedScoreSum += categoryRawAverage * cw.weight; // Weight the raw average of the category
+        categoryDimensionWeightSum += cw.weight; // The "weight" for this category's contribution
+        categoryHasScoredDimension = true; 
+      }
+    }
+    
+    if (categoryHasScoredDimension && categoryDimensionWeightSum > 0) {
+        // Average score for the category, weighted by dimension weights
+        const averageCategoryScore = categoryWeightedScoreSum / categoryDimensionWeightSum;
+        // Now, weight this average category score by the category\'s own weight
+        totalWeightedScore += averageCategoryScore * cw.weight;
+        totalWeightSum += cw.weight;
+    } else if (categoryHasScoredDimension && categoryDimensionWeightSum === 0 && cw.weight > 0) {
+        // Edge case: Dimensions were scored, but all had zero weight in the scheme, but category itself has a weight.
+        // This might mean the category\'s average (which would be 0 if all dimension weights are 0) is weighted.
+        // Or, more likely, this scenario implies an issue with the scheme or means the category contributes 0.
+        // For now, let\'s assume if dimension weights sum to 0, the category contributes 0 effectively if it relied on dimension weights.
+        // If it had direct scores (handled in the \'else\' above for dimensionsInCategory), that would be different.
+        // This path should ideally be refined based on precise business logic for zero-sum dimension weights.
+        // For safety, let\'s add the category weight to totalWeightSum if it was supposed to contribute.
+        totalWeightSum += cw.weight;
+    }
+
+  }
+
+  if (totalWeightSum === 0) {
+    // If total weight sum is zero (e.g., no matching categories/dimensions found or all weights are zero),
+    // fall back to raw average.
+    return { weightedAverageScore: rawAverage, calculationUsed: 'raw_average' };
+  }
+
+  return { weightedAverageScore: totalWeightedScore / totalWeightSum, calculationUsed: 'weighted' };
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -158,7 +255,9 @@ export async function GET(request: Request) {
               level: true,
               dimension: {
                 select: {
-                  name: true
+                  name: true,
+                  // Ensure categoryId is fetched if needed for direct category weighting without dimensionWeights
+                  categoryId: true, // Assuming Dimension model has categoryId
                 }
               }
             }
@@ -170,7 +269,7 @@ export async function GET(request: Request) {
                   category: { select: { id: true, name: true } },
                   dimensionWeights: {
                     include: {
-                      dimension: { select: { id: true, name: true } }
+                      dimension: { select: { id: true, name: true } } // Dimension details already here
                     }
                   }
                 }
@@ -192,7 +291,14 @@ export async function GET(request: Request) {
           { status: 403, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      return NextResponse.json(assessment);
+
+      // Calculate weighted score
+      const { weightedAverageScore, calculationUsed } = calculateWeightedScore(
+        assessment.scores as ScoreWithDimension[], // Cast needed due to Prisma generated types vs. our extended interface
+        assessment.weightingScheme as ExtendedWeightingScheme | null
+      );
+
+      return NextResponse.json({ ...assessment, weightedAverageScore, calculationUsed });
     } catch (error) {
       console.error('GET assessment error:', error);
       return new NextResponse(

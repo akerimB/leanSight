@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { Role } from '@prisma/client';
 
 const createWeightingSchemeSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
@@ -14,25 +15,27 @@ export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return new NextResponse(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
-    const schemes = await prisma.weightingScheme.findMany({
-      where: {
-        deletedAt: null,
-      },
-      orderBy: {
-        name: 'asc',
+    const weightingSchemes = await prisma.weightingScheme.findMany({
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        isDefault: true,
       },
     });
-
-    return NextResponse.json(schemes);
+    return NextResponse.json(weightingSchemes);
   } catch (error) {
     console.error('Error fetching weighting schemes:', error);
-    return NextResponse.json(
-      { message: 'Error fetching weighting schemes' },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to fetch weighting schemes' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

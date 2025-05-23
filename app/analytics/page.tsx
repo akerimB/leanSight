@@ -27,6 +27,9 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { useSession } from 'next-auth/react';
 import DownloadIcon from '@mui/icons-material/Download';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ImageIcon from '@mui/icons-material/Image';
+import { useGenerateImage } from 'recharts-to-png';
+import FileSaver from 'file-saver';
 
 // Chart imports
 import {
@@ -67,6 +70,8 @@ interface ChartPanelProps {
   height?: number | string;
   gridColumnSpan?: number | { xs?: number, md?: number };
   onDownloadCsv?: () => void;
+  onDownloadImage?: (filename: string) => Promise<void>;
+  chartImageFilename?: string;
   helpText?: string;
 }
 
@@ -83,11 +88,32 @@ const NoDataMessage = ({ height = 300 }: { height?: number | string }) => (
 );
 
 
-const ChartCard: React.FC<ChartPanelProps> = ({ title, data, loading, children, height = 340, gridColumnSpan, onDownloadCsv, helpText }) => {
+const ChartCard: React.FC<ChartPanelProps> = ({ title, data, loading, children, height = 340, gridColumnSpan, onDownloadCsv, onDownloadImage, chartImageFilename, helpText }) => {
   const gridStyles = gridColumnSpan ? { gridColumn: typeof gridColumnSpan === 'number' ? `span ${gridColumnSpan}` : { xs: `span ${gridColumnSpan.xs || 1}`, md: `span ${gridColumnSpan.md || 1}` } } : {};
   
   const numericHeight = typeof height === 'string' ? parseInt(height, 10) : height;
-  const adjustedHeight = numericHeight - (onDownloadCsv || helpText ? 70 : 40);
+  const buttonsPresent = onDownloadCsv || (onDownloadImage && chartImageFilename);
+  const adjustedHeight = numericHeight - (buttonsPresent || helpText ? 70 : 40);
+
+  const [getImage, { ref: imageRef, isLoading: isImageLoading }] = useGenerateImage<HTMLDivElement>({
+    quality: 0.9,
+    type: 'image/png',
+    options: { backgroundColor: 'white' } as any
+  });
+
+  const handleImageDownload = async () => {
+    if (!chartImageFilename) {
+      toast.error("Image filename not specified.");
+      return;
+    }
+    const image = await getImage();
+    if (image) {
+      FileSaver.saveAs(image, chartImageFilename.endsWith('.png') ? chartImageFilename : `${chartImageFilename}.png`);
+      toast.success(`Chart image "${chartImageFilename}.png" downloaded.`);
+    } else {
+      toast.error("Failed to generate chart image.");
+    }
+  };
 
   return (
     <Paper sx={{ p: 2, height: '100%', ...gridStyles }}>
@@ -102,13 +128,20 @@ const ChartCard: React.FC<ChartPanelProps> = ({ title, data, loading, children, 
             </MuiTooltip>
           )}
         </Box>
-        {onDownloadCsv && data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0) && !loading && (
-          <Button onClick={onDownloadCsv} size="small" startIcon={<DownloadIcon />}>
-            CSV
-          </Button>
-        )}
+        <Box sx={{display: 'flex', gap: 1}}>
+          {onDownloadCsv && data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0) && !loading && (
+            <Button onClick={onDownloadCsv} size="small" startIcon={<DownloadIcon />} aria-label={`Download ${title} as CSV`}>
+              CSV
+            </Button>
+          )}
+          {onDownloadImage && chartImageFilename && data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0) && !loading && (
+            <Button onClick={handleImageDownload} size="small" startIcon={<ImageIcon />} disabled={isImageLoading} aria-label={`Download ${title} as Image`}>
+              {isImageLoading ? 'Saving...' : 'Image'}
+            </Button>
+          )}
+        </Box>
       </Box>
-      <Box sx={{ height: adjustedHeight, mt: 1 }}>
+      <Box ref={imageRef} sx={{ height: adjustedHeight, mt: 1 }}>
         {loading ? <ChartPlaceholder height={adjustedHeight} /> : (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0) ? children(data) : <NoDataMessage height={adjustedHeight} />)}
       </Box>
     </Paper>
@@ -433,6 +466,8 @@ export default function AnalyticsPage() {
                   data={data?.trends} 
                   loading={loading}
                   onDownloadCsv={handleDownloadMaturityTrendCsv}
+                  onDownloadImage={async () => {}}
+                  chartImageFilename="maturity_trend_chart"
                   helpText="Shows the trend of the average maturity score over the selected period."
                 >
                   {(chartData) => (
@@ -501,34 +536,68 @@ export default function AnalyticsPage() {
               </Grid>
               {/* @ts-ignore */}
               <Grid item xs={12} md={6}> {/* Strengths and Weaknesses Card */}
-                <Paper sx={{ p: 2, height: 340, display: 'flex', flexDirection: 'column' }}>
+                <Paper sx={{ p: 2, height: 'auto', minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="h6" gutterBottom>Key Performance Areas</Typography>
-                  {loading ? <ChartPlaceholder height={280}/> : data && (data.topCategories || data.weakCategories) ? (
-                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-around', mt:1 }}>
-                      <Box sx={{ width: '48%' }}>
-                        <Typography variant="subtitle1" gutterBottom sx={{ color: 'success.main' }}>Top Strengths (Categories)</Typography>
-                        {data.topCategories && data.topCategories.length > 0 ? (
-                          <List dense>
-                            {data.topCategories.map((cat: { categoryName: string; avgScore: number }, index: number) => (
-                              <ListItem key={`top-${index}`} disablePadding>
-                                <ListItemText primary={cat.categoryName} secondary={`Avg. Score: ${cat.avgScore.toFixed(2)}`} />
-                              </ListItem>
-                            ))}
-                          </List>
-                        ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+                  {loading ? <ChartPlaceholder height={280}/> : data && (data.topCategories || data.weakCategories || data.topDimensions || data.weakDimensions) ? (
+                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 2, mt:1 }}>
+                      {/* Categories Row */}
+                      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
+                        <Box sx={{ width: '48%' }}>
+                          <Typography variant="subtitle1" gutterBottom sx={{ color: 'success.main' }}>Top Strengths (Categories)</Typography>
+                          {data.topCategories && data.topCategories.length > 0 ? (
+                            <List dense sx={{maxHeight: 100, overflow: 'auto'}}>
+                              {data.topCategories.map((cat: { categoryName: string; avgScore: number }, index: number) => (
+                                <ListItem key={`top-cat-${index}`} disablePadding>
+                                  <ListItemText primary={cat.categoryName} secondary={`Avg. Score: ${cat.avgScore.toFixed(2)}`} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+                        </Box>
+                        <Divider orientation="vertical" flexItem />
+                        <Box sx={{ width: '48%' }}>
+                          <Typography variant="subtitle1" gutterBottom sx={{ color: 'error.main' }}>Areas for Improvement (Categories)</Typography>
+                          {data.weakCategories && data.weakCategories.length > 0 ? (
+                            <List dense sx={{maxHeight: 100, overflow: 'auto'}}>
+                              {data.weakCategories.map((cat: { categoryName: string; avgScore: number }, index: number) => (
+                                <ListItem key={`weak-cat-${index}`} disablePadding>
+                                  <ListItemText primary={cat.categoryName} secondary={`Avg. Score: ${cat.avgScore.toFixed(2)}`} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+                        </Box>
                       </Box>
-                      <Divider orientation="vertical" flexItem />
-                      <Box sx={{ width: '48%' }}>
-                        <Typography variant="subtitle1" gutterBottom sx={{ color: 'error.main' }}>Areas for Improvement (Categories)</Typography>
-                        {data.weakCategories && data.weakCategories.length > 0 ? (
-                          <List dense>
-                            {data.weakCategories.map((cat: { categoryName: string; avgScore: number }, index: number) => (
-                              <ListItem key={`weak-${index}`} disablePadding>
-                                <ListItemText primary={cat.categoryName} secondary={`Avg. Score: ${cat.avgScore.toFixed(2)}`} />
-                              </ListItem>
-                            ))}
-                          </List>
-                        ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+
+                      <Divider sx={{ my: 1 }} />
+
+                      {/* Dimensions Row */}
+                      <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
+                        <Box sx={{ width: '48%' }}>
+                          <Typography variant="subtitle1" gutterBottom sx={{ color: 'success.main' }}>Top Strengths (Dimensions)</Typography>
+                          {data.topDimensions && data.topDimensions.length > 0 ? (
+                            <List dense sx={{maxHeight: 100, overflow: 'auto'}}>
+                              {data.topDimensions.map((dim: { dimensionName: string; avgScore: number }, index: number) => (
+                                <ListItem key={`top-dim-${index}`} disablePadding>
+                                  <ListItemText primary={dim.dimensionName} secondary={`Avg. Score: ${dim.avgScore.toFixed(2)}`} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+                        </Box>
+                        <Divider orientation="vertical" flexItem />
+                        <Box sx={{ width: '48%' }}>
+                          <Typography variant="subtitle1" gutterBottom sx={{ color: 'error.main' }}>Areas for Improvement (Dimensions)</Typography>
+                          {data.weakDimensions && data.weakDimensions.length > 0 ? (
+                            <List dense sx={{maxHeight: 100, overflow: 'auto'}}>
+                              {data.weakDimensions.map((dim: { dimensionName: string; avgScore: number }, index: number) => (
+                                <ListItem key={`weak-dim-${index}`} disablePadding>
+                                  <ListItemText primary={dim.dimensionName} secondary={`Avg. Score: ${dim.avgScore.toFixed(2)}`} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : <Typography variant="body2" color="text.secondary">Not enough data.</Typography>}
+                        </Box>
                       </Box>
                     </Box>
                   ) : <NoDataMessage height={280}/>}

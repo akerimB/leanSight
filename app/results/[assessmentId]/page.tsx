@@ -36,6 +36,8 @@ interface AssessmentDetails {
   updatedAt: string;
   scores: Score[];
   weightingScheme: WeightingSchemeBasic | null;
+  weightedAverageScore: number | null;
+  calculationUsed: 'weighted' | 'raw_average' | 'no_scores' | null;
 }
 
 export default function AssessmentResultDetailPage() {
@@ -83,6 +85,8 @@ export default function AssessmentResultDetailPage() {
           dimensionName: s.dimension?.name || 'Unknown Dimension'
         })) || [],
         weightingScheme: data.weightingScheme ? { id: data.weightingScheme.id, name: data.weightingScheme.name } : null,
+        weightedAverageScore: data.weightedAverageScore,
+        calculationUsed: data.calculationUsed,
       };
       setAssessment(transformedData);
     } catch (err: any) {
@@ -165,6 +169,18 @@ export default function AssessmentResultDetailPage() {
             <Box sx={{ flex: '1 1 100%' }}>
                 <Typography variant="subtitle1"><strong>Weighting Scheme:</strong> {assessment.weightingScheme?.name || 'None Applied'}</Typography>
             </Box>
+            {assessment.weightedAverageScore !== null && (
+              <Box sx={{ flex: '1 1 100%', mt: 1, p: 2, backgroundColor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="h6" component="div">
+                  Overall Maturity Score: {assessment.weightedAverageScore.toFixed(2)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  (Calculated: {assessment.calculationUsed === 'weighted' ? 'Weighted Average' : assessment.calculationUsed === 'raw_average' ? 'Raw Average' : 'N/A'})
+                  {assessment.calculationUsed === 'raw_average' && !assessment.weightingScheme && ' - No weighting scheme applied'}
+                  {assessment.calculationUsed === 'raw_average' && assessment.weightingScheme && ' - Scheme applied, but resulted in raw average (e.g., no matching dimensions/weights)'}
+                </Typography>
+              </Box>
+            )}
         </Box>
 
         <Divider sx={{ my: 2 }} />
