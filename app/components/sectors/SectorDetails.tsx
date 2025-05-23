@@ -47,6 +47,10 @@ interface Sector {
   name: string;
   description?: string | null;
   descriptors: Descriptor[];
+  _count?: { // Added to match API response for list view
+    descriptors?: number;
+    companies?: number;
+  };
 }
 
 interface SectorDetailsProps {
@@ -175,19 +179,25 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
 
   const fetchOtherSectors = async () => {
     setLoadingOtherSectors(true);
+    console.log('[SectorDetails] Fetching other sectors...'); // DEBUG
     try {
       const response = await fetch(`/api/sectors?excludeId=${initialSector.id}`);
       if(!response.ok) throw new Error ('Failed to fetch other sectors');
       const data = await response.json();
+      console.log('[SectorDetails] Fetched other sectors:', data); // DEBUG
       setOtherSectors(data);
     } catch (error: any) {
+      console.error('[SectorDetails] Error fetching other sectors:', error); // DEBUG
       toast.error(error.message || 'Could not load other sectors.');
       setOtherSectors([]);
+    } finally {
+      setLoadingOtherSectors(false);
+      console.log('[SectorDetails] Finished fetching other sectors, loadingOtherSectors set to false.'); // DEBUG
     }
-    setLoadingOtherSectors(false);
   };
 
   const handleOpenImportFromSector = () => {
+    console.log('@@@@ [SectorDetails] handleOpenImportFromSector CALLED @@@@'); // MODIFIED PROMINENT LOG
     fetchOtherSectors();
     setShowImportSectorModal(true);
     setSelectedSectorToImportFrom(null); // Reset previous selection
@@ -347,6 +357,8 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
   };
 
   const renderDescriptorManagement = () => {
+    console.log('%%%% [SectorDetails] RENDER DESCRIPTOR MANAGEMENT CALLED %%%%'); // NEW PROMINENT LOG
+
     // Group descriptors by dimension and extract weights
     const dimensionsMap = sector.descriptors.reduce((acc, desc) => {
       const dimName = desc.dimension?.name || 'Unknown Dimension';
@@ -358,6 +370,13 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
     }, {} as Record<string, { id: string, descriptors: Descriptor[] }>);
 
     const dimensionsArray = Object.entries(dimensionsMap).map(([name, data]) => ({ ...data, name }));
+
+    // DEBUG: Log disabled states for the import button
+    console.log('[SectorDetails] renderDescriptorManagement - Button Disabled States:', {
+      importingDescriptorsLoading,
+      importingFromJsonLoading,
+      isDisabled: importingDescriptorsLoading || importingFromJsonLoading
+    });
 
     return (
       <div className="mt-10">
@@ -371,7 +390,10 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
             <div className="flex gap-3 shrink-0">
               <Button 
                 variant="outline" 
-                onClick={handleOpenImportFromSector} 
+                onClick={() => {
+                  console.log('!!!! [SectorDetails] IMPORT FROM SECTOR BUTTON CLICKED !!!!'); // NEW DIRECT LOG IN ONCLICK
+                  handleOpenImportFromSector();
+                }} 
                 disabled={importingDescriptorsLoading || importingFromJsonLoading}
                 className="bg-white dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm"
               >
@@ -597,58 +619,76 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
 
         {/* Import from Sector Modal */}
         <Dialog open={showImportSectorModal} onOpenChange={setShowImportSectorModal}>
-          <DialogContent className="sm:max-w-[625px]">
+          <DialogContent className="sm:max-w-[525px] p-6 min-h-[400px] flex flex-col">
             <DialogHeader>
               <DialogTitle>Import Descriptors from Another Sector</DialogTitle>
               <DialogDescription>
-                Select a sector to view its descriptors, then choose which ones to import into "{initialSector.name}".
+                Select a sector to import its maturity level descriptors. You can then choose which specific descriptors to add to the current sector ('{initialSector.name}').
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="import-sector-select">Source Sector</Label>
-                <Select onValueChange={handleSelectSectorToImportFrom} disabled={loadingOtherSectors}>
-                  <SelectTrigger id="import-sector-select">
-                    <SelectValue placeholder={loadingOtherSectors ? "Loading sectors..." : "Select a source sector"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {otherSectors.map(s => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedSectorToImportFrom && (
-                <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto border p-2 rounded-md">
-                  <h4 className="font-medium text-sm mb-2">Available descriptors in "{selectedSectorToImportFrom.name}":</h4>
-                  {loadingDescriptorsOfSelectedSector ? <p>Loading descriptors...</p> :
-                    descriptorsOfSelectedSector.length > 0 ? (
-                      descriptorsOfSelectedSector.map(desc => (
-                        <div key={desc.id} className="flex items-center justify-between p-2 border-b last:border-b-0">
-                          <div>
-                            <p className="font-medium">L{desc.level} - {desc.dimension?.name}</p>
-                            <p className="text-xs text-gray-600">{desc.description}</p>
+            
+            <div className="flex-grow overflow-y-auto py-4">
+              {loadingOtherSectors ? (
+                <div className="flex justify-center items-center h-full">
+                  <p className="text-lg text-slate-600 dark:text-slate-300">Loading other sectors...</p>
+                </div>
+              ) : otherSectors.length === 0 ? (
+                <div className="flex justify-center items-center h-full">
+                  <p className="text-lg text-slate-600 dark:text-slate-300">No other sectors available to import from.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="import-sector-select">Select Sector</Label>
+                    <Select onValueChange={handleSelectSectorToImportFrom} value={selectedSectorToImportFrom?.id || ''}>
+                      <SelectTrigger id="import-sector-select">
+                        <SelectValue placeholder="Choose a sector..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {otherSectors.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name} ({s._count?.descriptors || 0} descriptors)</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedSectorToImportFrom && (
+                    <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto border p-3 rounded-md bg-slate-50 dark:bg-slate-800">
+                      <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2">Available descriptors in "{selectedSectorToImportFrom.name}":</h4>
+                      {loadingDescriptorsOfSelectedSector ? (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Loading descriptors...</p>
+                      ) : descriptorsOfSelectedSector.length > 0 ? (
+                        descriptorsOfSelectedSector.map(desc => (
+                          <div key={desc.id} className="flex items-center justify-between p-2.5 border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-md transition-colors">
+                            <div>
+                              <p className="font-medium text-sm text-slate-800 dark:text-slate-200">L{desc.level} - {desc.dimension?.name || 'General'}</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 break-words">{desc.description}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => toggleDescriptorForImport(desc.id)} className="ml-2 shrink-0">
+                              {selectedDescriptorIdsToImport.has(desc.id) ? 
+                                <CheckSquare className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> : 
+                                <Square className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                              }
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => toggleDescriptorForImport(desc.id)}>
-                            {selectedDescriptorIdsToImport.has(desc.id) ? 
-                              <CheckSquare className="h-5 w-5 text-blue-600" /> : 
-                              <Square className="h-5 w-5 text-gray-400" />
-                            }
-                          </Button>
-                        </div>
-                      ))
-                    ) : <p className="text-sm text-gray-500">No descriptors found in this sector.</p>
-                  }
+                        ))
+                      ) : (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">No descriptors found in this sector.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DialogClose>
-              <Button onClick={handleConfirmImportDescriptors} disabled={importingDescriptorsLoading || selectedDescriptorIdsToImport.size === 0}>
-                {importingDescriptorsLoading ? "Importing..." : `Import ${selectedDescriptorIdsToImport.size} Descriptor(s)`}
+
+            <DialogFooter className="mt-auto">
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button 
+                onClick={handleConfirmImportDescriptors} 
+                disabled={importingDescriptorsLoading || selectedDescriptorIdsToImport.size === 0 || !selectedSectorToImportFrom}
+              >
+                {importingDescriptorsLoading ? 'Importing...' : `Import Selected (${selectedDescriptorIdsToImport.size})`}
               </Button>
             </DialogFooter>
           </DialogContent>

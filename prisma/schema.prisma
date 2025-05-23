@@ -27,6 +27,9 @@ model User {
   role             Role
   companyId        String?
   company          Company?     @relation(fields: [companyId], references: [id])
+  emailNotifications Boolean    @default(true)
+  darkMode             Boolean    @default(false)
+  language             String     @default("en")
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   deletedAt        DateTime?    // Soft delete

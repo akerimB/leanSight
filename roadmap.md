@@ -74,13 +74,13 @@ This document outlines planned and suggested improvements for the Analytics Page
     - [x] UI to associate specific weighting schemes with assessments (during creation or update). *(Implemented: dropdown on assessment creation page, pre-selects default, passes ID to backend. Existing assessments can also have scheme updated by Admin/Expert on their detail page)*
 
 ## Sectors
-    - [ ] **copy maturity level descriptions from other sectors problem
-        -[ ] related button works but the sector list do not appear, so copy of maturity level descriptions is not avaialble.
+    - [x] **Copy maturity level descriptions from other sectors**
+        - [x] Fix: Related button works, but sector list did not appear if empty or while loading. Added loading/empty states to the import dialog. *(UI now clarifies if no other sectors are available or if list is loading)*
 
 
 ## Settings menu
-- [ ] **Settings need to be active for users change and see.
-    - [ ] Activate settings.
+- [ ] **Settings need to be active for users change and see.**
+    - [~] Activate settings. *(Basic preferences like notifications, dark mode toggle, language choice are now loaded from and saved to backend. Password update and full dark mode/language integration TBD)*
     - [ ] Multiple language support should be added. 
 
 

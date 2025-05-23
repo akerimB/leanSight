@@ -31,7 +31,8 @@ interface PageProps {
 }
 
 export default async function SectorPage({ params }: PageProps) {
-  const { sectorId } = params;
+  const resolvedParams = await Promise.resolve(params);
+  const { sectorId } = resolvedParams;
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.role !== 'ADMIN') {
