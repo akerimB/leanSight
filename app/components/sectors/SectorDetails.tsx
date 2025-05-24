@@ -82,20 +82,19 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
   const [selectedDescriptorIdsToImport, setSelectedDescriptorIdsToImport] = useState<Set<string>>(new Set());
   const [importingDescriptorsLoading, setImportingDescriptorsLoading] = useState(false);
 
-  // State for importing descriptors from JSON
-  const [jsonFile, setJsonFile] = useState<File | null>(null);
-  const [importingFromJsonLoading, setImportingFromJsonLoading] = useState(false);
-
   // Add new state for editing descriptors
   const [editingDescriptor, setEditingDescriptor] = useState<Descriptor | null>(null);
   const [editDescriptorLevel, setEditDescriptorLevel] = useState<number>(1);
   const [editDescriptorDescription, setEditDescriptorDescription] = useState('');
   const [editDescriptorLoading, setEditDescriptorLoading] = useState(false);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   useEffect(() => {
     setSector(initialSector);
     setName(initialSector.name);
     setDescription(initialSector.description || '');
+    // console.log('[SectorDetails] useEffect [initialSector] - initial otherSectors state:', otherSectors); // Keep for now or remove if too noisy
   }, [initialSector]);
 
   // Fetch available dimensions for the new descriptor form
@@ -178,21 +177,38 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
   };
 
   const fetchOtherSectors = async () => {
+    console.log('****************************************');
+    console.log('*** fetchOtherSectors: STARTED ***');
+    console.log('****************************************');
     setLoadingOtherSectors(true);
-    console.log('[SectorDetails] Fetching other sectors...'); // DEBUG
+    // console.log('[SectorDetails] Fetching other sectors...'); // DEBUG - Replaced by prominent log
+
+    let rawResponseText = null; // For logging
     try {
       const response = await fetch(`/api/sectors?excludeId=${initialSector.id}`);
-      if(!response.ok) throw new Error ('Failed to fetch other sectors');
-      const data = await response.json();
-      console.log('[SectorDetails] Fetched other sectors:', data); // DEBUG
+      
+      rawResponseText = await response.text(); // Get raw text first
+      console.log('*** fetchOtherSectors: RAW RESPONSE TEXT ***', rawResponseText);
+
+      if(!response.ok) {
+        console.error('*** fetchOtherSectors: API RESPONSE NOT OK ***', { status: response.status, statusText: response.statusText, body: rawResponseText });
+        throw new Error (`Failed to fetch other sectors. Status: ${response.status}. Body: ${rawResponseText}`);
+      }
+      
+      const data = JSON.parse(rawResponseText); // Parse the text we logged
+      console.log('*** fetchOtherSectors: PARSED DATA ***', data);
       setOtherSectors(data);
+      setLoadingOtherSectors(false); // Set loading to false immediately after data
+      console.log('*** fetchOtherSectors: States SET (otherSectors, loadingOtherSectors=false) ***');
     } catch (error: any) {
-      console.error('[SectorDetails] Error fetching other sectors:', error); // DEBUG
+      console.error('*** fetchOtherSectors: ERROR CAUGHT ***', error);
       toast.error(error.message || 'Could not load other sectors.');
       setOtherSectors([]);
-    } finally {
       setLoadingOtherSectors(false);
-      console.log('[SectorDetails] Finished fetching other sectors, loadingOtherSectors set to false.'); // DEBUG
+    } finally {
+      console.log('****************************************');
+      console.log('*** fetchOtherSectors: FINALLY BLOCK ***');
+      console.log('****************************************');
     }
   };
 
@@ -263,48 +279,8 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
     setImportingDescriptorsLoading(false);
   };
 
-  const handleJsonFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setJsonFile(event.target.files[0]);
-    } else {
-      setJsonFile(null);
-    }
-  };
-
   const handleDownloadSampleJson = () => {
-    // This will point to the API endpoint that serves the sample JSON
-    window.open('/api/sectors/sample-descriptor-json', '_blank');
-  };
-
-  const handleImportFromJson = async () => {
-    if (!jsonFile) {
-      toast.error("Please select a JSON file to import.");
-      return;
-    }
-    setImportingFromJsonLoading(true);
-    const formData = new FormData();
-    formData.append('file', jsonFile);
-
-    try {
-      // This API endpoint needs to be created
-      const response = await fetch(`/api/sectors/${initialSector.id}/upload-descriptors-json`, {
-        method: 'POST',
-        body: formData, // FormData will set the Content-Type header correctly
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to import descriptors from JSON');
-      }
-      const result = await response.json();
-      toast.success(result.message || 'Descriptors imported successfully from JSON!');
-      setJsonFile(null); // Reset file input
-      router.refresh(); // Refresh data
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to import descriptors from JSON.');
-    } finally {
-      setImportingFromJsonLoading(false);
-    }
+    window.open(`/api/sectors/${sector.id}/download`, '_blank');
   };
 
   const handleEditDescriptor = async () => {
@@ -356,6 +332,22 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
     setEditDescriptorDescription(descriptor.description);
   };
 
+  const handleDeleteSector = async () => {
+    try {
+      const response = await fetch(`/api/sectors/${sector.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete sector');
+      }
+      toast.success('Sector deleted successfully');
+      router.push('/sectors');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete sector');
+    }
+  };
+
   const renderDescriptorManagement = () => {
     console.log('%%%% [SectorDetails] RENDER DESCRIPTOR MANAGEMENT CALLED %%%%'); // NEW PROMINENT LOG
 
@@ -374,8 +366,7 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
     // DEBUG: Log disabled states for the import button
     console.log('[SectorDetails] renderDescriptorManagement - Button Disabled States:', {
       importingDescriptorsLoading,
-      importingFromJsonLoading,
-      isDisabled: importingDescriptorsLoading || importingFromJsonLoading
+      isDisabled: importingDescriptorsLoading
     });
 
     return (
@@ -390,19 +381,11 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
             <div className="flex gap-3 shrink-0">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  console.log('!!!! [SectorDetails] IMPORT FROM SECTOR BUTTON CLICKED !!!!'); // NEW DIRECT LOG IN ONCLICK
-                  handleOpenImportFromSector();
-                }} 
-                disabled={importingDescriptorsLoading || importingFromJsonLoading}
+                onClick={handleDownloadSampleJson} 
                 className="bg-white dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm"
               >
-                <ImportIcon className="mr-2 h-4 w-4" />
-                Import from Sector
-              </Button>
-              <Button variant="outline" onClick={handleDownloadSampleJson} className="bg-white dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm">
                 <Download className="mr-2 h-4 w-4" />
-                Download Template
+                Download Maturity Levels
               </Button>
             </div>
           </CardHeader>
@@ -435,17 +418,35 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="level" className="text-sm font-medium text-slate-700 dark:text-slate-300">Maturity Level (1-5)</Label>
-                    <Input 
-                      id="level" 
-                      type="number" 
-                      min={1} 
-                      max={5} 
-                      value={newDescriptorLevel} 
-                      onChange={(e) => setNewDescriptorLevel(parseInt(e.target.value, 10))}
-                      required
-                      className="w-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 shadow-sm"
-                    />
+                    <Label htmlFor="level" className="text-sm font-medium text-slate-700 dark:text-slate-300">Maturity Level</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">Level {newDescriptorLevel}</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {newDescriptorLevel === 1 && 'Initial'}
+                          {newDescriptorLevel === 2 && 'Developing'}
+                          {newDescriptorLevel === 3 && 'Defined'}
+                          {newDescriptorLevel === 4 && 'Managed'}
+                          {newDescriptorLevel === 5 && 'Optimizing'}
+                        </span>
+                      </div>
+                      <Input 
+                        id="level" 
+                        type="range" 
+                        min={1} 
+                        max={5} 
+                        value={newDescriptorLevel} 
+                        onChange={(e) => setNewDescriptorLevel(parseInt(e.target.value, 10))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span>Initial</span>
+                        <span>Developing</span>
+                        <span>Defined</span>
+                        <span>Managed</span>
+                        <span>Optimizing</span>
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="newDescriptorDescription" className="text-sm font-medium text-slate-700 dark:text-slate-300">Description</Label>
@@ -470,35 +471,6 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                 </form>
               </CardContent>
             </Card>
-
-            {/* Import from JSON */}
-            <Card className="shadow-lg rounded-xl dark:border-slate-700 dark:bg-slate-800">
-              <CardHeader className="border-b dark:border-slate-700 pb-4 pt-5 px-6">
-                <CardTitle className="text-xl font-semibold text-slate-800 dark:text-slate-100">Import from JSON</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-5">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="json-file-input" className="text-sm font-medium text-slate-700 dark:text-slate-300">Upload JSON File</Label>
-                    <Input 
-                      id="json-file-input" 
-                      type="file" 
-                      accept=".json"
-                      onChange={handleJsonFileChange}
-                      className="w-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-slate-300 dark:file:border-slate-500 file:text-sm file:font-medium file:bg-slate-50 dark:file:bg-slate-600 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-slate-100 dark:hover:file:bg-slate-500 shadow-sm"
-                      disabled={importingFromJsonLoading}
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleImportFromJson} 
-                    className="w-full transition-colors duration-150 ease-in-out bg-slate-600 hover:bg-slate-700 dark:bg-slate-500 dark:hover:bg-slate-600 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg"
-                    disabled={!jsonFile || importingFromJsonLoading || importingDescriptorsLoading}
-                  >
-                    {importingFromJsonLoading ? 'Importing...' : 'Import from JSON'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Column: Existing Descriptors (col-span-2) */}
@@ -521,17 +493,19 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                             .map(desc => (
                               <div key={desc.id} className="p-5 border border-slate-200/80 dark:border-slate-700/60 rounded-lg bg-slate-50/70 dark:bg-slate-700/30 shadow-sm hover:shadow-md transition-shadow duration-200">
                                 <div className="flex justify-between items-center mb-3.5">
-                                  <span 
-                                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wider 
-                                      ${desc.level === 1 ? 'bg-red-100 text-red-700 dark:bg-red-500/80 dark:text-red-50' : ''}
-                                      ${desc.level === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/80 dark:text-orange-50' : ''}
-                                      ${desc.level === 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/80 dark:text-yellow-50' : ''}
-                                      ${desc.level === 4 ? 'bg-green-100 text-green-700 dark:bg-green-500/80 dark:text-green-50' : ''}
-                                      ${desc.level === 5 ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/80 dark:text-blue-50' : ''}
-                                    `}
-                                  >
-                                    LEVEL {desc.level} {/* Uppercase for emphasis */}
-                                  </span>
+                                  <div className="flex items-center space-x-3">
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 rounded-full bg-slate-400 mr-2" />
+                                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        {desc.level === 1 && 'Initial'}
+                                        {desc.level === 2 && 'Developing'}
+                                        {desc.level === 3 && 'Defined'}
+                                        {desc.level === 4 && 'Managed'}
+                                        {desc.level === 5 && 'Optimizing'}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">Level {desc.level}</span>
+                                  </div>
                                   <div className="flex gap-2.5">
                                     <Button variant="outline" size="sm" onClick={() => openEditDialog(desc)} className="text-slate-700 border-slate-300 hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 hover:dark:bg-slate-600 transition-colors shadow-sm text-xs px-3 py-1.5 h-auto">
                                       Edit
@@ -553,7 +527,7 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                 ) : (
                   <div className="text-center py-16">
                     <svg className="mx-auto h-16 w-16 text-slate-400 dark:text-slate-500 opacity-75" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
                     </svg>
                     <h3 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">No Descriptors Defined</h3>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Use the forms on the left to add new maturity descriptors or import them.</p>
@@ -603,9 +577,12 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
                 className="mt-1"
               />
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-2">
               <Button type="submit" disabled={sectorUpdateLoading || !name.trim()}>
                 {sectorUpdateLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button type="button" variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+                Delete Sector
               </Button>
             </div>
           </form>
@@ -615,6 +592,19 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
           </div>
         )}
         
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+              <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+              <p>Are you sure you want to delete this sector? This action cannot be undone.</p>
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDeleteSector}>Delete</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {renderDescriptorManagement()}
 
         {/* Import from Sector Modal */}
@@ -627,57 +617,82 @@ const SectorDetails: React.FC<SectorDetailsProps> = ({ sector: initialSector }) 
               </DialogDescription>
             </DialogHeader>
             
-            <div className="flex-grow overflow-y-auto py-4">
-              {loadingOtherSectors ? (
-                <div className="flex justify-center items-center h-full">
-                  <p className="text-lg text-slate-600 dark:text-slate-300">Loading other sectors...</p>
-                </div>
-              ) : otherSectors.length === 0 ? (
-                <div className="flex justify-center items-center h-full">
-                  <p className="text-lg text-slate-600 dark:text-slate-300">No other sectors available to import from.</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="import-sector-select">Select Sector</Label>
-                    <Select onValueChange={handleSelectSectorToImportFrom} value={selectedSectorToImportFrom?.id || ''}>
-                      <SelectTrigger id="import-sector-select">
-                        <SelectValue placeholder="Choose a sector..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {otherSectors.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.name} ({s._count?.descriptors || 0} descriptors)</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {selectedSectorToImportFrom && (
-                    <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto border p-3 rounded-md bg-slate-50 dark:bg-slate-800">
-                      <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2">Available descriptors in "{selectedSectorToImportFrom.name}":</h4>
-                      {loadingDescriptorsOfSelectedSector ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Loading descriptors...</p>
-                      ) : descriptorsOfSelectedSector.length > 0 ? (
-                        descriptorsOfSelectedSector.map(desc => (
-                          <div key={desc.id} className="flex items-center justify-between p-2.5 border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-md transition-colors">
-                            <div>
-                              <p className="font-medium text-sm text-slate-800 dark:text-slate-200">L{desc.level} - {desc.dimension?.name || 'General'}</p>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 break-words">{desc.description}</p>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => toggleDescriptorForImport(desc.id)} className="ml-2 shrink-0">
-                              {selectedDescriptorIdsToImport.has(desc.id) ? 
-                                <CheckSquare className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> : 
-                                <Square className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+            <div 
+              className="flex-grow overflow-y-auto py-4" 
+              key={`loading-${loadingOtherSectors}-count-${otherSectors.length}`}
+            >
+              {
+                (() => {
+                  console.log('[DialogContent] Rendering: loadingOtherSectors =', loadingOtherSectors, '| otherSectors.length =', otherSectors.length);
+                  if (loadingOtherSectors) {
+                    console.log('[DialogContent] Showing: Loading message');
+                    return (
+                      <div className="flex justify-center items-center h-full">
+                        <p className="text-lg text-slate-600 dark:text-slate-300">Loading other sectors...</p>
+                      </div>
+                    );
+                  } else if (otherSectors.length === 0) {
+                    console.log('[DialogContent] Showing: No other sectors message');
+                    return (
+                      <div className="flex justify-center items-center h-full">
+                        <p className="text-lg text-slate-600 dark:text-slate-300">No other sectors available to import from.</p>
+                      </div>
+                    );
+                  } else {
+                    console.log('[DialogContent] Rendering path for ACTUAL LIST: loadingOtherSectors=', loadingOtherSectors, 'otherSectors.length=', otherSectors.length);
+                    return (
+                      <div className="grid gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="import-sector-select">Select Sector</Label>
+                          <Select onValueChange={handleSelectSectorToImportFrom} value={selectedSectorToImportFrom?.id || ''}>
+                            <SelectTrigger id="import-sector-select">
+                              <SelectValue placeholder="Choose a sector..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {
+                                (() => {
+                                  console.log('[DialogContent] Mapping otherSectors:', otherSectors);
+                                  return otherSectors.map((s) => {
+                                    console.log('[DialogContent] Mapping sector item:', s);
+                                    return (
+                                      <SelectItem key={s.id} value={s.id}>{s.name} ({s._count?.descriptors || 0} descriptors)</SelectItem>
+                                    );
+                                  });
+                                })()
                               }
-                            </Button>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {selectedSectorToImportFrom && (
+                          <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto border p-3 rounded-md bg-slate-50 dark:bg-slate-800">
+                            <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2">Available descriptors in "{selectedSectorToImportFrom.name}":</h4>
+                            {loadingDescriptorsOfSelectedSector ? (
+                              <p className="text-sm text-slate-500 dark:text-slate-400">Loading descriptors...</p>
+                            ) : descriptorsOfSelectedSector.length > 0 ? (
+                              descriptorsOfSelectedSector.map(desc => (
+                                <div key={desc.id} className="flex items-center justify-between p-2.5 border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-md transition-colors">
+                                  <div>
+                                    <p className="font-medium text-sm text-slate-800 dark:text-slate-200">L{desc.level} - {desc.dimension?.name || 'General'}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 break-words">{desc.description}</p>
+                                  </div>
+                                  <Button variant="ghost" size="icon" onClick={() => toggleDescriptorForImport(desc.id)} className="ml-2 shrink-0">
+                                    {selectedDescriptorIdsToImport.has(desc.id) ? 
+                                      <CheckSquare className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> : 
+                                      <Square className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                                    }
+                                  </Button>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-slate-500 dark:text-slate-400">No descriptors found in this sector.</p>
+                            )}
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">No descriptors found in this sector.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                        )}
+                      </div>
+                    );
+                  }
+                })()
+              }
             </div>
 
             <DialogFooter className="mt-auto">

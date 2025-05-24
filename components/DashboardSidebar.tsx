@@ -13,6 +13,9 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import BalanceIcon from '@mui/icons-material/Balance';
 import CategoryIcon from '@mui/icons-material/Category';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import GroupIcon from '@mui/icons-material/Group';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import ScoreIcon from '@mui/icons-material/Score';
 
 const drawerWidth = 260;
 
@@ -45,11 +48,21 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
       >
         <Toolbar />
         <Typography variant="h6" sx={{ p: 2 }}>
-          LeanSight Dashboard
+          LeanSight
         </Typography>
         <Divider />
         <List>
-          {menuItems.map((item) => (
+          {[
+            { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
+            { label: 'Sectors', href: '/sectors', icon: <BusinessIcon /> },
+            { label: 'Companies/Departments', href: '/companies', icon: <GroupIcon /> },
+            { label: 'Assessment', href: '/assessment', icon: <AssessmentIcon /> },
+            { label: 'Weighting Schemes', href: '/weighting-schemes', icon: <TimelineIcon /> },
+            { label: 'Results', href: '/results', icon: <ScoreIcon /> },
+            { label: 'Analytics', href: '/analytics', icon: <BarChartIcon /> },
+            { label: 'Settings', href: '/settings', icon: <SettingsIcon /> },
+            { label: 'Admin', href: '/admin', icon: <AdminPanelSettingsIcon /> },
+          ].map((item) => (
             <ListItemButton
               key={item.href}
               component={Link}

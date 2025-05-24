@@ -337,55 +337,6 @@ export default function DashboardPage() {
 
       {/* Main Content Row */}
       <Grid container spacing={3}>
-        {/* Quick Actions Section */}
-        <Grid item xs={12} lg={8}>
-          <Typography variant="h6" sx={{ mb: 3 }}>
-            Quick Actions
-          </Typography>
-          <Grid container spacing={2}>
-            {dashboardCards.map((card) => (
-              <Grid item xs={12} sm={6} md={4} key={card.href}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    display: 'flex',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4
-                    }
-                  }}
-                >
-                  <CardActionArea
-                    component={Link}
-                    href={card.href}
-                    sx={{ height: '100%' }}
-                  >
-                    <CardContent sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'row',
-                      alignItems: 'center', 
-                      gap: 2,
-                      py: 3,
-                      height: '100%'
-                    }}>
-                      {card.icon}
-                      <Box>
-                        <Typography variant="h6">
-                          {card.label}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {card.description}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-
         {/* Activity Feed Section */}
         <Grid item xs={12} lg={4}>
           <Paper 

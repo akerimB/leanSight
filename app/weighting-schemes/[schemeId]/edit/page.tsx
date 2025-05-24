@@ -299,44 +299,62 @@ export default function EditWeightingSchemePage() {
         )}
 
         <List disablePadding>
-          {formData.categoryWeights.map((cw, categoryIndex) => (
-            <React.Fragment key={cw.categoryId}>
-              <ListItem sx={{ py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: {xs: 'column', sm: 'row'} }}>
-                <ListItemText 
-                  primary={cw.categoryName}
-                  secondary={`Current Weight: ${(cw.weight * 100).toFixed(1)}% (Inputs TBD)`}
-                  primaryTypographyProps={{variant: 'h6'}}
-                  sx={{mb: {xs: 1, sm: 0}}}
-                />
-              </ListItem>
-              
-              {cw.dimensionWeights.length > 0 && (
-                <List disablePadding sx={{ pl: {xs: 2, sm:4}, pt:1, pb:1, backgroundColor: 'rgba(0,0,0,0.02)', borderLeft: '2px solid', borderColor: 'divider' }}>
-                  <Typography variant="subtitle2" sx={{pl:2, pt:1, pb:0.5, fontWeight:'medium'}}>Dimensions within {cw.categoryName}:</Typography>
-                  {cw.dimensionWeights.map((dw, dimensionIndex) => (
-                    <ListItem key={dw.dimensionId} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5, flexDirection: {xs: 'column', sm: 'row'} }}>
-                      <ListItemText 
-                        primary={dw.dimensionName} 
-                        sx={{flexGrow: 1, mb: {xs: 0.5, sm:0}} }
-                      />
-                      <TextField
-                        label="Dimension Weight"
-                        type="number"
-                        value={dw.weight}
-                        onChange={(e) => handleDimensionWeightChange(categoryIndex, dimensionIndex, e.target.value)}
-                        sx={{ width: {xs: '100%', sm:150}, ml: {sm: 2} }}
-                        InputProps={{ inputProps: { min: 0, step: "0.01" } }}
-                        disabled={saving}
-                        size="small"
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-              <Divider component="li" />
-            </React.Fragment>
-          ))}
+          {formData.categoryWeights.map((cw, categoryIndex) => {
+            const totalDimensionWeight = cw.dimensionWeights.reduce((sum, dw) => sum + (parseFloat(dw.weight as any) || 0), 0);
+            return (
+              <React.Fragment key={cw.categoryId}>
+                <ListItem sx={{ py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: {xs: 'column', sm: 'row'} }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <ListItemText 
+                      primary={cw.categoryName}
+                      primaryTypographyProps={{variant: 'h6'}}
+                      sx={{mb: {xs: 1, sm: 0}}}
+                    />
+                    <TextField
+                      label="Category Weight"
+                      type="number"
+                      value={cw.weight}
+                      onChange={(e) => handleCategoryWeightChange(categoryIndex, e.target.value)}
+                      sx={{ width: {xs: '100%', sm:120}, ml: {sm: 2} }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      disabled={saving}
+                      size="small"
+                    />
+                  </Box>
+                </ListItem>
+                {cw.dimensionWeights.length > 0 && (
+                  <List disablePadding sx={{ pl: {xs: 2, sm:4}, pt:1, pb:1, backgroundColor: 'rgba(0,0,0,0.02)', borderLeft: '2px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{pl:2, pt:1, pb:0.5, fontWeight:'medium'}}>Dimensions within {cw.categoryName}:</Typography>
+                    <Box sx={{pl:2, pb:1, fontSize:'0.95em', color:'text.secondary', fontWeight:500}}>Dimension Weight</Box>
+                    {cw.dimensionWeights.map((dw, dimensionIndex) => (
+                      <ListItem key={dw.dimensionId} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5, flexDirection: {xs: 'column', sm: 'row'} }}>
+                        <ListItemText 
+                          primary={dw.dimensionName} 
+                          sx={{flexGrow: 1, mb: {xs: 0.5, sm:0}} }
+                        />
+                        <TextField
+                          type="number"
+                          value={dw.weight}
+                          onChange={(e) => handleDimensionWeightChange(categoryIndex, dimensionIndex, e.target.value)}
+                          sx={{ width: {xs: '100%', sm:120}, ml: {sm: 2} }}
+                          InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                          disabled={saving}
+                          size="small"
+                        />
+                      </ListItem>
+                    ))}
+                    <Box sx={{pl:2, pt:1, fontWeight:600, color:'primary.main'}}>Total Dimension Weight: {(totalDimensionWeight * 100).toFixed(1)}%</Box>
+                  </List>
+                )}
+                <Divider component="li" />
+              </React.Fragment>
+            );
+          })}
         </List>
+        {/* Grand Total */}
+        <Box sx={{mt:3, textAlign:'right', fontWeight:700, fontSize:'1.1em', color:'primary.main'}}>
+          Grand Total (Sum of Category Weights): {(formData.categoryWeights.reduce((sum, cw) => sum + (parseFloat(cw.weight as any) || 0), 0) * 100).toFixed(1)}%
+        </Box>
       </Paper>
     </Box>
   );
