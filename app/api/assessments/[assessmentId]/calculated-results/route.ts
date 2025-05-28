@@ -45,7 +45,7 @@ interface CalculatedResults {
 
 export async function GET(
   request: Request,
-  { params }: { params: { assessmentId: string } }
+  context: { params: Promise<{ assessmentId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -55,11 +55,12 @@ export async function GET(
     );
   }
 
+  const { assessmentId } = await context.params;
   const { searchParams } = new URL(request.url);
   const weightingSchemeId = searchParams.get('weightingSchemeId');
 
   const validation = requestParamsSchema.safeParse({
-    assessmentId: params.assessmentId,
+    assessmentId: assessmentId,
     weightingSchemeId: weightingSchemeId,
   });
 

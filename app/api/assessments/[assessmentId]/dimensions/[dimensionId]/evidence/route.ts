@@ -118,6 +118,17 @@ export async function POST(request: NextRequest) {
     const file = reqAsAny.file as Express.Multer.File | undefined;
     const formData = await request.formData(); // Re-parse formData to get other fields like notes
     const notes = formData.get('notes') as string | null;
+    
+    // Parse tags if present
+    let tags: string[] = [];
+    const tagsString = formData.get('tags') as string | null;
+    if (tagsString) {
+      try {
+        tags = JSON.parse(tagsString);
+      } catch (e) {
+        console.error('Error parsing tags:', e);
+      }
+    }
 
     if (!file && (!notes || notes.trim() === '')) { // Ensure at least a file or some notes text
         return NextResponse.json({ error: 'Either a file must be uploaded or notes must be provided.' }, { status: 400 });
@@ -141,6 +152,8 @@ export async function POST(request: NextRequest) {
         fileUrl: fileUrl,     
         fileType: fileType,   
         notes: notes,
+        tags: tags,
+        version: 1, // Initial version
         uploadedById: session.user.id,
       },
     });

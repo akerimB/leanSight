@@ -140,9 +140,14 @@ export default function AssessmentResultDetailPage() {
             <Typography variant="h4" gutterBottom sx={{mb:0}}>
             Assessment Details: {assessment.id}
             </Typography>
-            <Button variant="outlined" onClick={() => router.push('/analytics')}>
-                View Overall Analytics
-            </Button>
+            <Box>
+              <Button variant="outlined" onClick={() => router.push('/analytics')} sx={{ mr: 1 }}>
+                  View Overall Analytics
+              </Button>
+              <Button variant="contained" onClick={() => window.location.href = `/api/assessments/${assessmentId}/download`}>
+                  Download as PDF
+              </Button>
+            </Box>
         </Box>
         <Divider sx={{ my: 2 }} />
         

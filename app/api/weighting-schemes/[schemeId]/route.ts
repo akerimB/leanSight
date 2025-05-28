@@ -32,7 +32,7 @@ function extractSchemeId(request: Request) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { schemeId: string } }
+  context: { params: Promise<{ schemeId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -42,7 +42,7 @@ export async function GET(
     });
   }
 
-  const { schemeId } = params;
+  const { schemeId } = await context.params;
 
   if (!schemeId) {
     return new NextResponse(JSON.stringify({ error: 'Scheme ID is required' }), {
@@ -88,7 +88,10 @@ export async function GET(
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ schemeId: string }> }
+) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== 'ADMIN') {
@@ -96,7 +99,7 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const schemeId = extractSchemeId(request);
+    const { schemeId } = await context.params;
     const body = await request.json();
     const validation = updateWeightingSchemeWithWeightsSchema.safeParse(body);
 
@@ -225,7 +228,10 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ schemeId: string }> }
+) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== 'ADMIN') {
@@ -233,7 +239,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const schemeId = extractSchemeId(request);
+    const { schemeId } = await context.params;
 
     const scheme = await prisma.weightingScheme.findUnique({
       where: { id: schemeId },

@@ -119,12 +119,12 @@ export default function WeightingSchemeDetailPage() {
       </Button>
       <Paper sx={{ p: 3 }}>
         <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item={true} xs={12} sm={9}>
+            <Grid size={{ xs: 12, sm: 9 }}>
                 <Typography variant="h4" gutterBottom>
                 {scheme.name}
                 </Typography>
             </Grid>
-            <Grid item={true} xs={12} sm={3} sx={{textAlign: {sm: 'right'}}}>
+            <Grid size={{ xs: 12, sm: 3 }} sx={{textAlign: {sm: 'right'}}}>
                 {scheme.isDefault && <Chip label="Default Scheme" color="primary" />}
             </Grid>
         </Grid>

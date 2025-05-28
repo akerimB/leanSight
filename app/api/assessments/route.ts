@@ -55,6 +55,9 @@ function calculateWeightedScore(
 
   // Create a map for easy lookup of scores by dimensionId
   const scoresMap = new Map(scores.map(s => [s.dimensionId, s.level]));
+  
+  // Create a set of dimension IDs that have scores
+  const scoredDimensionIds = new Set(scores.map(s => s.dimensionId));
 
   for (const cw of weightingScheme.categoryWeights) {
     let categoryWeightedScoreSum = 0;
@@ -62,7 +65,13 @@ function calculateWeightedScore(
     let categoryHasScoredDimension = false;
 
     if (cw.dimensionWeights && cw.dimensionWeights.length > 0) {
-      for (const dw of cw.dimensionWeights) {
+      // Filter dimension weights to only include dimensions that have scores
+      // This prevents errors from dimensions that are in the weight scheme but not assessed
+      const validDimensionWeights = cw.dimensionWeights.filter(dw => 
+        scoredDimensionIds.has(dw.dimensionId)
+      );
+      
+      for (const dw of validDimensionWeights) {
         const scoreLevel = scoresMap.get(dw.dimensionId);
         if (scoreLevel !== undefined) {
           categoryWeightedScoreSum += scoreLevel * dw.weight;
@@ -159,6 +168,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify the user (expert) exists in the database
+    // This prevents foreign key violations on expertId
+    const expertExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true }
+    });
+
+    if (!expertExists) {
+      console.error(`User not found with ID: ${session.user.id}`);
+      return new NextResponse(
+        JSON.stringify({ error: 'Your user account could not be found. Please sign out and sign in again.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // If departmentId is provided (not null), verify it belongs to the company
     if (departmentId !== null) {
       const department = await prisma.department.findUnique({
@@ -181,14 +205,84 @@ export async function POST(request: Request) {
       }
     }
 
+    // If we have a weighting scheme, make sure it's compatible with the company's sector
+    let finalWeightingSchemeId = weightingSchemeId || null;
+    if (weightingSchemeId) {
+      // Get the company's sector ID
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { sectorId: true }
+      });
+      
+      if (company) {
+        // Get dimensions that have descriptors for this sector (valid dimensions)
+        const categories = await prisma.category.findMany({
+          include: {
+            dimensions: {
+              where: {
+                descriptors: {
+                  some: {
+                    sectorId: company.sectorId,
+                    deletedAt: null
+                  }
+                }
+              },
+              select: { id: true }
+            }
+          }
+        });
+        
+        // Create a set of valid dimension IDs
+        const validDimensionIds = new Set();
+        categories.forEach(cat => {
+          cat.dimensions.forEach(dim => {
+            validDimensionIds.add(dim.id);
+          });
+        });
+        
+        // Check if the weighting scheme has weights for dimensions without descriptors
+        const weightingScheme = await prisma.weightingScheme.findUnique({
+          where: { id: weightingSchemeId },
+          include: {
+            categoryWeights: {
+              include: {
+                dimensionWeights: true
+              }
+            }
+          }
+        });
+        
+        if (weightingScheme) {
+          let hasInvalidDimensions = false;
+          weightingScheme.categoryWeights.forEach(cw => {
+            cw.dimensionWeights.forEach(dw => {
+              if (!validDimensionIds.has(dw.dimensionId)) {
+                hasInvalidDimensions = true;
+              }
+            });
+          });
+          
+          // If the weighting scheme references invalid dimensions, don't use it
+          if (hasInvalidDimensions) {
+            console.warn(`Weighting scheme ${weightingSchemeId} references dimensions without descriptors for sector ${company.sectorId}. Using even weights instead.`);
+            finalWeightingSchemeId = null;
+          }
+        }
+      }
+    }
+    
+    // Log the attempt but don't query the database separately
+    // NextAuth should ensure the user exists
+    console.log(`Creating assessment with expertId: ${session.user.id}, companyId: ${companyId}, departmentId: ${departmentId}`);
+    
     // Create the assessment record
     const assessment = await prisma.assessment.create({
       data: {
         companyId,
         departmentId, // This can be null for company-wide assessments
-        expertId: session.user.id,
+        expertId: session.user.id, // Use session user ID directly
         status: draft ? AssessmentStatus.DRAFT : AssessmentStatus.SUBMITTED,
-        weightingSchemeId: weightingSchemeId || null,
+        weightingSchemeId: finalWeightingSchemeId,
       },
     });
 
@@ -202,6 +296,52 @@ export async function POST(request: Request) {
       }));
       
       await prisma.score.createMany({ data: scoreData });
+      
+      // Calculate and store the weighted score if we have scores and potentially a weighting scheme
+      if (answers.length > 0) {
+        // Fetch the created assessment with scores and dimension details for calculation
+        const assessmentWithScores = await prisma.assessment.findUnique({
+          where: { id: assessment.id },
+          include: {
+            scores: {
+              include: {
+                dimension: { select: { name: true, categoryId: true } }
+              }
+            },
+            weightingScheme: {
+              include: {
+                categoryWeights: {
+                  include: {
+                    dimensionWeights: {
+                      include: {
+                        dimension: true
+                      }
+                    },
+                    category: true
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        if (assessmentWithScores) {
+          // Cast to the expected types for the calculateWeightedScore function
+          const scoresWithDimension = assessmentWithScores.scores as unknown as ScoreWithDimension[];
+          const extendedWeightingScheme = assessmentWithScores.weightingScheme as unknown as ExtendedWeightingScheme | null;
+          
+          // Calculate the weighted score
+          const { weightedAverageScore, calculationUsed } = calculateWeightedScore(scoresWithDimension, extendedWeightingScheme);
+          
+          // Update the assessment with the calculated score
+          // Using Prisma.updateMany to bypass type issues
+          await prisma.$executeRaw`
+            UPDATE "Assessment"
+            SET "weightedAverageScore" = ${weightedAverageScore}, "calculationUsed" = ${calculationUsed}
+            WHERE "id" = ${assessment.id}
+          `;
+        }
+      }
     }
 
     return new NextResponse(JSON.stringify({ id: assessment.id }), {
@@ -210,6 +350,7 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Error creating assessment:', error);
+    
     // Check for specific Prisma errors
     if (error.code === 'P2002') {
       return new NextResponse(
@@ -217,12 +358,35 @@ export async function POST(request: Request) {
         { status: 409, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    
     if (error.code === 'P2003') {
+      // Enhanced error messaging for foreign key constraint violations
+      let errorMessage = 'Invalid reference: One or more IDs do not exist';
+      
+      if (error.meta && error.meta.field_name) {
+        const fieldName = error.meta.field_name;
+        
+        if (fieldName.includes('expertId')) {
+          errorMessage = 'Session error: Your user account could not be verified. Please sign out and sign in again.';
+        } else if (fieldName.includes('companyId')) {
+          errorMessage = 'The selected company does not exist or has been deleted.';
+        } else if (fieldName.includes('departmentId')) {
+          errorMessage = 'The selected department does not exist or has been deleted.';
+        } else if (fieldName.includes('dimensionId')) {
+          errorMessage = 'One or more dimensions in your assessment are no longer available. Please refresh the page and try again.';
+        } else if (fieldName.includes('weightingSchemeId')) {
+          errorMessage = 'The selected weighting scheme is no longer available. Please choose another scheme.';
+        }
+        
+        console.error(`Foreign key error on field: ${fieldName}`);
+      }
+      
       return new NextResponse(
-        JSON.stringify({ error: 'Invalid reference: One or more IDs do not exist' }),
+        JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    
     return new NextResponse(
       JSON.stringify({ error: 'Failed to submit assessment', details: error.message }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -363,115 +527,162 @@ export async function PUT(request: Request) {
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }
+
   try {
     const body = await request.json();
-    const validation = updateAssessmentSchema.safeParse(body);
 
-    if (!validation.success) {
+    // Validation with Zod
+    const validationResult = updateAssessmentSchema.safeParse(body);
+    if (!validationResult.success) {
       return new NextResponse(
-        JSON.stringify({ error: 'Invalid input', details: validation.error.flatten().fieldErrors }),
+        JSON.stringify({ error: 'Invalid request data', details: validationResult.error.errors }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const { id, answers, status: newStatus, weightingSchemeId } = validation.data;
+    const { id, answers, status, weightingSchemeId } = validationResult.data;
 
-    const existing = await prisma.assessment.findUnique({ where: { id } });
-    if (!existing) {
+    // Fetch the assessment to check permissions and current state
+    const existingAssessment = await prisma.assessment.findUnique({
+      where: { id, deletedAt: null },
+      include: { 
+        company: { select: { id: true } }, 
+        scores: {
+          include: {
+            dimension: { select: { id: true, name: true, categoryId: true } }
+          }
+        }
+      }
+    });
+
+    if (!existingAssessment) {
       return new NextResponse(
         JSON.stringify({ error: 'Assessment not found' }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // General Authorization: User must be Admin or belong to the company of the assessment
-    // This initial check is for general updates like answers and status by company members.
-    let canUpdateAssessment = false;
-    if (session.user.role === Role.ADMIN || session.user.companyId === existing.companyId) {
-        canUpdateAssessment = true;
-    }
-    
-    // If only weightingSchemeId is being updated, or in addition to other fields,
-    // specific authorization for weightingSchemeId (Admin or assigned Expert) takes precedence if general auth fails.
-    let canUpdateScheme = false;
-    if (weightingSchemeId !== undefined) { // Intention to change scheme is present
-        if (session.user.role === Role.ADMIN || session.user.id === existing.expertId) {
-            canUpdateScheme = true;
-        } else {
-             // If user is not Admin/Expert but tries to change scheme, it's forbidden for this part.
-            return new NextResponse(
-                JSON.stringify({ error: 'Forbidden - Only Admin or the assigned Expert can change the weighting scheme.' }),
-                { status: 403, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-    } else {
-        // If there's no intention to change the scheme, this part doesn't need specific auth beyond general.
-        canUpdateScheme = true; // Effectively means no scheme update is requested or auth passes through.
-    }
-
-    // If neither general update permission nor specific scheme update permission is met.
-    // This handles cases where a non-admin/non-company member tries to update other fields (e.g. status, answers)
-    // without being the expert trying to change the scheme.
-    if (!canUpdateAssessment && weightingSchemeId === undefined) {
-         return new NextResponse(
-            JSON.stringify({ error: 'Forbidden - You do not have permission to update this assessment.' }),
-            { status: 403, headers: { 'Content-Type': 'application/json' } }
-        );
-    }
-
-    const dataToUpdate: any = {};
-
-    // If answers present, replace scores (within transaction if combined with other updates)
-    if (Array.isArray(answers)) {
-      // This part needs to be handled carefully if combined in a transaction or as separate operations.
-      // For simplicity, keeping it as sequential operations before the final assessment update.
-      await prisma.score.deleteMany({ where: { assessmentId: id } });
-      if (answers.length > 0) {
-        const scoreData = answers.map((a) => ({
-          assessmentId: id,
-          dimensionId: a.dimensionId,
-          level: a.level,
-          perception: true, // Assuming default
-        }));
-        await prisma.score.createMany({ data: scoreData });
-      }
-      // If answers are updated, it implies the assessment is at least SUBMITTED unless explicitly set otherwise
-      if (!newStatus && existing.status === AssessmentStatus.DRAFT) {
-        dataToUpdate.status = AssessmentStatus.SUBMITTED;
-      }
-    }
-
-    // Handle status transition
-    if (newStatus) {
-      if (newStatus === AssessmentStatus.REVIEWED && session.user.role !== Role.ADMIN) {
+    // Authorization check
+    if (session.user.role !== Role.ADMIN && session.user.companyId !== existingAssessment.companyId) {
+      if (session.user.id !== existingAssessment.expertId) { // Check if they're the assessment creator
         return new NextResponse(
-          JSON.stringify({ error: 'Forbidden - only admins can mark as reviewed' }),
+          JSON.stringify({ error: 'Forbidden - You do not have permission to update this assessment' }),
           { status: 403, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      // Allow Admin to revert to DRAFT perhaps, or any other valid transitions.
-      // For now, assume any status change by an authorized user is valid unless specifically restricted.
-      dataToUpdate.status = newStatus;
     }
 
-    // Handle weightingSchemeId update
-    if (weightingSchemeId !== undefined && canUpdateScheme) { // Check canUpdateScheme again for safety, though prior logic should gate it.
-      dataToUpdate.weightingSchemeId = weightingSchemeId; // This can be string (UUID) or null
+    // Prepare base update data
+    const updateData: any = {};
+
+    // Handle weightingSchemeId update if provided
+    if (weightingSchemeId !== undefined) {
+      updateData.weightingSchemeId = weightingSchemeId;
+    }
+    
+    // Handle status update if provided
+    if (status) {
+      // Status validation logic
+      // For example: can only move to SUBMITTED if it's in DRAFT, etc.
+      if (existingAssessment.status === AssessmentStatus.REVIEWED && status !== AssessmentStatus.REVIEWED && session.user.role !== Role.ADMIN) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Forbidden - Only admins can change the status of a reviewed assessment' }),
+          { status: 403, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Ensure DRAFT assessments can't be submitted without at least one answer
+      if (existingAssessment.status === AssessmentStatus.DRAFT && status === AssessmentStatus.SUBMITTED) {
+        const scoreCount = await prisma.score.count({ where: { assessmentId: id } });
+        if (scoreCount === 0 && (!answers || answers.length === 0)) {
+          return new NextResponse(
+            JSON.stringify({ error: 'Cannot submit assessment without any scores' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      updateData.status = status;
     }
 
-    // Perform the update if there's anything in dataToUpdate
-    if (Object.keys(dataToUpdate).length > 0) {
-      await prisma.assessment.update({ 
-        where: { id }, 
-        data: dataToUpdate 
+    // Handle answers update if provided
+    if (answers && answers.length > 0) {
+      // Prepare a transaction to update all scores atomically
+      await prisma.$transaction([
+        // First, delete existing scores (could also use upsert for each, but this is simpler)
+        prisma.score.deleteMany({
+          where: { assessmentId: id }
+        }),
+        // Then create the new scores
+        prisma.score.createMany({
+          data: answers.map((a: { dimensionId: string; level: number }) => ({
+            assessmentId: id,
+            dimensionId: a.dimensionId,
+            level: a.level,
+            perception: true,
+          }))
+        })
+      ]);
+    }
+
+    // After updating answers or changing weightingScheme, we need to calculate the weighted score
+    if (answers || weightingSchemeId !== undefined) {
+      // Fetch fresh data for score calculation
+      const updatedAssessment = await prisma.assessment.findUnique({
+        where: { id },
+        include: {
+          scores: {
+            include: {
+              dimension: { select: { name: true, categoryId: true } }
+            }
+          },
+          weightingScheme: {
+            include: {
+              categoryWeights: {
+                include: {
+                  dimensionWeights: {
+                    include: {
+                      dimension: true
+                    }
+                  },
+                  category: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (updatedAssessment && updatedAssessment.scores.length > 0) {
+        // Cast to the expected types for the calculateWeightedScore function
+        const scoresWithDimension = updatedAssessment.scores as unknown as ScoreWithDimension[];
+        const extendedWeightingScheme = updatedAssessment.weightingScheme as unknown as ExtendedWeightingScheme | null;
+        
+        // Calculate the weighted score
+        const { weightedAverageScore, calculationUsed } = calculateWeightedScore(scoresWithDimension, extendedWeightingScheme);
+        
+        // Add these to our updateData
+        updateData.weightedAverageScore = weightedAverageScore;
+        updateData.calculationUsed = calculationUsed;
+      }
+    }
+
+    // Perform the update if there's anything to update
+    if (Object.keys(updateData).length > 0) {
+      await prisma.assessment.update({
+        where: { id },
+        data: updateData
       });
     }
 
-    return NextResponse.json({ id, message: "Assessment updated successfully." });
-  } catch (error) {
-    console.error('PUT assessment error:', error);
+    return new NextResponse(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error: any) {
+    console.error('Error updating assessment:', error);
     return new NextResponse(
-      JSON.stringify({ error: 'Failed to update assessment' }),
+      JSON.stringify({ error: 'Failed to update assessment', details: error.message }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

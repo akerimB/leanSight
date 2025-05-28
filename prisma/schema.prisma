@@ -34,7 +34,9 @@ model User {
   updatedAt        DateTime     @updatedAt
   deletedAt        DateTime?    // Soft delete
   uploadedEvidence Evidence[]   @relation("UserEvidence")
+  evidenceHistory  EvidenceHistory[] // Relation to evidence history uploads
   assessments      Assessment[] @relation("ExpertAssessment")
+  auditLogs        AuditLog[]   // Back-relation to AuditLog
 }
 
 model Company {
@@ -71,21 +73,32 @@ model Sector {
 }
 
 model Assessment {
-  id                String           @id @default(uuid())
-  companyId         String
-  departmentId      String?
-  expertId          String
-  status            AssessmentStatus
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  deletedAt         DateTime?        // Soft delete
-  scores            Score[]
-  evidence          Evidence[]
-  company           Company          @relation(fields: [companyId], references: [id])
-  department        Department?      @relation(fields: [departmentId], references: [id])
-  expert            User             @relation("ExpertAssessment", fields: [expertId], references: [id])
-  weightingSchemeId String?
-  weightingScheme   WeightingScheme? @relation(fields: [weightingSchemeId], references: [id])
+  id                  String             @id @default(uuid())
+  companyId           String
+  departmentId        String?
+  expertId            String             // User ID of the expert who created/submitted
+  status              AssessmentStatus   @default(DRAFT)
+  weightingSchemeId   String?            // ID of the chosen weighting scheme
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  deletedAt           DateTime?          // For soft deletes
+
+  weightedAverageScore Float?             // Newly added for overall score
+  calculationUsed     String?            // Newly added (e.g., 'weighted', 'raw_average')
+
+  company             Company            @relation(fields: [companyId], references: [id])
+  department          Department?        @relation(fields: [departmentId], references: [id])
+  expert              User               @relation("ExpertAssessment", fields: [expertId], references: [id])
+  weightingScheme     WeightingScheme?   @relation(fields: [weightingSchemeId], references: [id])
+  scores              Score[]
+  evidence            Evidence[]
+
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([expertId])
+  @@index([weightingSchemeId])
+  @@index([status])
+  @@index([deletedAt])
 }
 
 model Category {
@@ -163,11 +176,37 @@ model Evidence {
   fileType     String?    // Ensuring this is optional as per user requirement
   uploadedById String
   notes        String?
+  tags         String[]   @default([])  // Array of string tags for categorization
+  version      Int        @default(1)   // Version counter for tracking changes
   uploadedAt   DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?  // Soft delete field
   assessment   Assessment @relation(fields: [assessmentId], references: [id])
   dimension    Dimension  @relation(fields: [dimensionId], references: [id])
   uploadedBy   User       @relation("UserEvidence", fields: [uploadedById], references: [id])
+  history      EvidenceHistory[] // Relation to version history
+  
+  @@index([assessmentId])
+  @@index([dimensionId])
+  @@index([uploadedById])
+  @@index([deletedAt])
+}
+
+model EvidenceHistory {
+  id           String     @id @default(uuid())
+  evidenceId   String     // Reference to the original evidence
+  fileUrl      String?    // Previous version's file URL
+  fileType     String?    // Previous version's file type
+  notes        String?    // Previous version's notes
+  tags         String[]   @default([]) // Previous version's tags
+  version      Int        // Version number when this history entry was created
+  uploadedById String     // User who created this version
+  createdAt    DateTime   @default(now()) // When this history entry was created
+  evidence     Evidence   @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+  
+  @@index([evidenceId])
+  @@index([uploadedById])
 }
 
 model TemplateConfig {
@@ -236,3 +275,32 @@ model DimensionWeight {
 // 
 //   @@unique([dimensionId, sectorId])
 // }
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., "feature_assessment_freeze_enabled"
+  value       String   // Store as string, parse as needed (boolean, number, json)
+  name        String?  // User-friendly name e.g., "Enable Assessment Freeze"
+  description String?  // Optional description for the setting
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  timestamp   DateTime  @default(now())
+  userId      String?   // User who performed the action (can be null for system actions)
+  userEmail   String?   // Store email for easier display, denormalized
+  action      String    // e.g., "CREATED_SECTOR", "SUBMITTED_ASSESSMENT", "UPDATED_SYSTEM_SETTING"
+  entityType  String?   // e.g., "Sector", "Assessment", "SystemSetting", "User"
+  entityId    String?   // ID of the affected entity
+  details     Json?     // Any additional details about the event (e.g., changed fields for an update)
+  ipAddress   String?   // Optional: IP address of the user
+
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([entityType, entityId])
+}

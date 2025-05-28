@@ -16,6 +16,8 @@ import ShowChartIcon from '@mui/icons-material/ShowChart';
 import GroupIcon from '@mui/icons-material/Group';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import ScoreIcon from '@mui/icons-material/Score';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { signOut } from 'next-auth/react';
 
 const drawerWidth = 260;
 
@@ -33,6 +35,11 @@ const menuItems = [
 
 export default function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/auth/signin' });
+  };
+  
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -51,7 +58,7 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
           LeanSight
         </Typography>
         <Divider />
-        <List>
+        <List sx={{ flexGrow: 1 }}>
           {[
             { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
             { label: 'Sectors', href: '/sectors', icon: <BusinessIcon /> },
@@ -74,11 +81,20 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
             </ListItemButton>
           ))}
         </List>
+        <Divider />
+        <List>
+          <ListItemButton onClick={handleSignOut}>
+            <ListItemIcon>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Sign Out" />
+          </ListItemButton>
+        </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {children}
-    </Box>
+      </Box>
     </Box>
   );
 }

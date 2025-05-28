@@ -11,17 +11,17 @@ const importDescriptorsSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { sectorId: string } } // sectorId here is the ID of the target sector
+  context: { params: Promise<{ sectorId: string }> } // sectorId here is the ID of the target sector
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== 'ADMIN') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
 
-  const targetSectorId = params.sectorId;
+  const { sectorId } = await context.params;
 
   // Validate targetSectorId is a UUID (optional, but good practice if not guaranteed by router)
-  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(targetSectorId)) {
+  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(sectorId)) {
     return NextResponse.json({ message: 'Invalid target sector ID format.' }, { status: 400 });
   }
 
@@ -40,7 +40,7 @@ export async function POST(
 
     // 1. Fetch the target sector to ensure it exists and is not deleted
     const targetSector = await prisma.sector.findUnique({
-      where: { id: targetSectorId, deletedAt: null },
+      where: { id: sectorId, deletedAt: null },
     });
 
     if (!targetSector) {
@@ -75,7 +75,7 @@ export async function POST(
       // Check if a descriptor with the same dimensionId and level already exists in the target sector
       const existingDescriptor = await prisma.maturityDescriptor.findFirst({
         where: {
-          sectorId: targetSectorId,
+          sectorId: sectorId,
           dimensionId: sourceDescriptor.dimensionId,
           level: sourceDescriptor.level,
           deletedAt: null, // Check against active descriptors in the target sector
@@ -88,7 +88,7 @@ export async function POST(
         // Create the new descriptor for the target sector
         const newDescriptor = await prisma.maturityDescriptor.create({
           data: {
-            sectorId: targetSectorId,
+            sectorId: sectorId,
             dimensionId: sourceDescriptor.dimensionId,
             level: sourceDescriptor.level,
             description: sourceDescriptor.description,

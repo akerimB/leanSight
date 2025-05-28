@@ -87,3 +87,6 @@ This document outlines planned and suggested improvements for the Analytics Page
 ## Code & Backend Considerations
 - [ ] **Centralized Data Fetching Logic (Custom Hook)**: If frontend data fetching logic for analytics becomes more complex (e.g., with new filters), refactor into a reusable custom hook.
 - [ ] **Backend API Enhancements**: The `/api/analytics/summary` endpoint may need to be updated to support new filters (company, department) and potentially return additional data points for new metrics (deltas, detailed user activity).
+
+## LLM chatbot
+- [ ] Using open source tools, add functionality of chatbot that the user can use it as assessment helper. LLM tool take a document as a basis and answer the questions regarding to the assessment.

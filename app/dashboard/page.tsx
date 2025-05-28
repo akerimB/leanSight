@@ -282,7 +282,7 @@ export default function DashboardPage() {
         {loading ? (
           // Loading skeletons for stats
           Array(4).fill(null).map((_, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
+            <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={index}>
               <Paper sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                   <Skeleton variant="circular" width={40} height={40} />
@@ -296,7 +296,7 @@ export default function DashboardPage() {
           ))
         ) : (
           quickStats.map((stat, index) => (
-            <Grid item xs={12} sm={6} lg={3} key={index}>
+            <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={index}>
               <Paper
                 sx={{
                   p: 3,
@@ -338,7 +338,7 @@ export default function DashboardPage() {
       {/* Main Content Row */}
       <Grid container spacing={3}>
         {/* Activity Feed Section */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Paper 
             sx={{ 
               height: '100%',

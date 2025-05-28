@@ -111,7 +111,7 @@ export default function SectorsPage() {
       ) : (
         <Grid container spacing={3}>
           {sectors.map((sector) => (
-            <Grid item xs={12} sm={6} md={4} key={sector.id}>
+            <Grid key={sector.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, transition: '0.3s', '&:hover': { boxShadow: 6 } }}>
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography gutterBottom variant="h5" component="h2">

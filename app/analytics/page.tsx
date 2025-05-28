@@ -334,8 +334,7 @@ export default function AnalyticsPage() {
         </Box>
         <Grid container spacing={3}>
           {[...Array(4)].map((_, index) => (
-            // @ts-ignore
-            <Grid item xs={12} md={6} key={index}>
+            <Grid size={{ xs: 12, md: 6 }} key={index}>
               <Paper sx={{ p: 2, height: 340 }}>
                 <Typography variant="h6"><Skeleton width="60%" /></Typography>
                 <Skeleton variant="rectangular" width="100%" height={280} sx={{mt: 1}}/>
@@ -416,7 +415,7 @@ export default function AnalyticsPage() {
           {currentTab === 0 && (
             <Grid container spacing={3}>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper sx={{ p: 3, height: 340, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                     <Typography variant="h6" gutterBottom textAlign="center" sx={{ mb: 0 }}>
@@ -460,7 +459,7 @@ export default function AnalyticsPage() {
                 </Paper>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard 
                   title="Maturity Trend" 
                   data={data?.trends} 
@@ -486,7 +485,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper sx={{ p: 3, height: 340 }}>
                   <Typography variant="h6" gutterBottom>Completion & Adoption</Typography>
                   {loading ? <ChartPlaceholder height={280}/> : data?.completion ? (
@@ -505,7 +504,7 @@ export default function AnalyticsPage() {
                 </Paper>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper sx={{ p: 3, height: 340 }}>
                   <Typography variant="h6" gutterBottom>Benchmarking</Typography>
                   {loading ? <ChartPlaceholder height={280}/> : data?.benchmark ? (
@@ -517,7 +516,7 @@ export default function AnalyticsPage() {
                 </Paper>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard title="Score Level Distribution" data={data?.scoreDistribution} loading={loading}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -535,7 +534,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}> {/* Strengths and Weaknesses Card */}
+              <Grid size={{ xs: 12, md: 6 }}> {/* Strengths and Weaknesses Card */}
                 <Paper sx={{ p: 2, height: 'auto', minHeight: 340, display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="h6" gutterBottom>Key Performance Areas</Typography>
                   {loading ? <ChartPlaceholder height={280}/> : data && (data.topCategories || data.weakCategories || data.topDimensions || data.weakDimensions) ? (
@@ -604,7 +603,7 @@ export default function AnalyticsPage() {
                 </Paper>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}> {/* Assessment Status Distribution Card */}
+              <Grid size={{ xs: 12, md: 6 }}> {/* Assessment Status Distribution Card */}
                 <ChartCard title="Assessment Status Distribution" data={data?.assessmentStatusDistribution} loading={loading} height={340}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -637,7 +636,7 @@ export default function AnalyticsPage() {
           {currentTab === 1 && (
             <Grid container spacing={3}>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard title="Category Performance" data={data?.dimensionBreakdown} loading={loading}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -653,7 +652,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard title="Category Distribution" data={data?.categoryDistribution} loading={loading}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -671,7 +670,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard title="Department Comparison" data={data?.departmentComparison} loading={loading}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -689,7 +688,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={12}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <Paper sx={{ p: 2, gridColumn: { xs: 'span 1', md: 'span 2' } }}>
                   <Typography variant="h6" gutterBottom>Department × Category Heatmap</Typography>
                   {loading ? <ChartPlaceholder height={300}/> : data?.heatmap && data.heatmap.length > 0 && data.heatmap[0]?.categories ? (
@@ -739,7 +738,7 @@ export default function AnalyticsPage() {
           {currentTab === 2 && (
             <Grid container spacing={3}>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ChartCard title="Evidence Counts per Dimension" data={data?.evidenceCounts} loading={loading}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">
@@ -757,7 +756,7 @@ export default function AnalyticsPage() {
                 </ChartCard>
               </Grid>
               {/* @ts-ignore */}
-              <Grid item xs={12} md={12}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <ChartCard title="Cohort Analysis (Average Score Over Time)" data={data?.cohort} loading={loading} height={400} gridColumnSpan={{ xs: 1, md: 2 }}>
                   {(chartData) => (
                     <ResponsiveContainer width="100%" height="100%">

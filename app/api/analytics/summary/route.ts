@@ -177,7 +177,7 @@ export async function GET(request: Request) {
   const catMap: Record<string, { total: number; count: number; categoryName: string }> = {};
   dimensionBreakdown.forEach(({ dimensionId, avgScore }) => {
     const dim = dimsFull.find((d) => d.id === dimensionId);
-    if (!dim) return;
+    if (!dim || !dim.category) return;
     const { id: catId, name: categoryName } = dim.category;
     if (!catMap[catId]) catMap[catId] = { total: 0, count: 0, categoryName };
     catMap[catId].total += avgScore;
@@ -325,6 +325,7 @@ export async function GET(request: Request) {
   heatRaw.forEach(({ level, assessment, dimension }) => {
     const deptId = assessment.departmentId || 'Unassigned';
     const cat = dimension.category;
+    if (!cat) return;
     heatMap[deptId] = heatMap[deptId] || {};
     heatMap[deptId][cat.id] = heatMap[deptId][cat.id] || { total: 0, count: 0 };
     heatMap[deptId][cat.id].total += level;

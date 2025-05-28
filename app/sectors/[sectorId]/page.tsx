@@ -25,14 +25,11 @@ interface DescriptorGroup {
 }
 
 interface PageProps {
-  params: {
-    sectorId: string;
-  };
+  params: Promise<{ sectorId: string }>;
 }
 
 export default async function SectorPage({ params }: PageProps) {
-  const resolvedParams = await Promise.resolve(params);
-  const { sectorId } = resolvedParams;
+  const { sectorId } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.role !== 'ADMIN') {

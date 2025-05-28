@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import {
   Typography,
   Box,
@@ -46,6 +46,7 @@ import { SelectChangeEvent } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
+import EvidenceUpload from '@/app/components/EvidenceUpload';
 
 interface Company {
   id: string;
@@ -127,6 +128,9 @@ export default function AssessmentPage() {
   const [deleteAssessmentId, setDeleteAssessmentId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // State for evidence upload
+  const [selectedEvidenceDimension, setSelectedEvidenceDimension] = useState<string | null>(null);
+
   // Load past assessments list
   useEffect(() => {
     if (status === 'authenticated') {
@@ -141,12 +145,28 @@ export default function AssessmentPage() {
 
   // Load companies and their departments
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && session?.user?.id) {
+      // Load companies directly without extra validation
       setCompaniesLoading(true);
       fetch('/api/admin/companies', { credentials: 'include' })
-        .then((res) => res.ok ? res.json() : Promise.reject('Failed to load companies'))
+        .then((res) => {
+          if (!res.ok) {
+            // If unauthorized, session might be invalid
+            if (res.status === 401) {
+              console.error('Session appears to be invalid, redirecting to login');
+              signOut({ callbackUrl: '/auth/signin?error=Session+expired.+Please+sign+in+again.' });
+              return Promise.reject('Unauthorized');
+            }
+            return Promise.reject('Failed to load companies');
+          }
+          return res.json();
+        })
         .then((data) => setCompanies(data))
-        .catch((err) => setError(String(err)))
+        .catch((err) => {
+          if (err !== 'Unauthorized') {
+            setError(String(err));
+          }
+        })
         .finally(() => setCompaniesLoading(false));
 
       // Fetch weighting schemes
@@ -167,19 +187,61 @@ export default function AssessmentPage() {
         })
         .finally(() => setLoadingWeightingSchemes(false));
     }
-  }, [status]);
+  }, [status, session]);
 
   // Fetch template when moving to questions step
   useEffect(() => {
     if (activeStep === 1) {
       setTemplateLoading(true);
+      setError(''); // Clear any previous errors
       const queryParam = selectedDepartment === 'all'
         ? `companyId=${selectedCompany}`
         : `departmentId=${selectedDepartment}`;
       fetch(`/api/assessment-template?${queryParam}`, { credentials: 'include' })
-        .then((res) => res.ok ? res.json() : Promise.reject('Failed to load template'))
-        .then((data) => setTemplate(data))
-        .catch((err) => setError(String(err)))
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then(errorData => {
+              console.error('Template fetch error:', errorData);
+              throw new Error(errorData.error || 'Failed to load assessment template');
+            });
+          }
+          return res.json();
+        })
+        .then((data) => {
+          setTemplate(data);
+          // Check if template is empty or has dimensions without descriptors
+          if (!data || data.length === 0) {
+            setError('No assessment template available for this company or department. Please contact your administrator.');
+            return;
+          }
+          
+          // Check if there are categories with dimensions
+          const hasDimensions = data.some((category: Category) => 
+            category.dimensions && category.dimensions.length > 0
+          );
+          
+          if (!hasDimensions) {
+            setError('No dimensions available for assessment. Please contact your administrator.');
+            return;
+          }
+          
+          // Check if dimensions have descriptors
+          const hasDescriptors = data.some((category: Category) => 
+            category.dimensions && 
+            category.dimensions.some((dim: Dimension) => 
+              dim.descriptors && dim.descriptors.length > 0
+            )
+          );
+          
+          if (!hasDescriptors) {
+            setError('No maturity level descriptions available for assessment. Please contact your administrator.');
+            return;
+          }
+        })
+        .catch((err) => {
+          console.error('Error loading template:', err);
+          setError(err.message || 'Failed to load assessment template. Please try again or contact support.');
+        })
         .finally(() => setTemplateLoading(false));
     }
   }, [activeStep, selectedDepartment, selectedCompany]);
@@ -210,6 +272,7 @@ export default function AssessmentPage() {
     // Create draft on step 0 when moving to questions
     if (activeStep === 0 && !assessmentId) {
       try {
+        setLoading(true);
         // For company-wide assessments, we explicitly set departmentId to null
         const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
         
@@ -229,8 +292,15 @@ export default function AssessmentPage() {
         });
 
         if (!res.ok) { 
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Failed to start assessment'); 
+          const errorData = await res.json().catch(() => ({}));
+          let errorMessage = errorData.error || 'Failed to start assessment';
+          
+          // Provide more user-friendly errors for specific cases
+          if (errorMessage.includes('Invalid reference') || errorMessage.includes('do not exist')) {
+            errorMessage = 'There appears to be a configuration issue with the selected company or department. Please try another selection or contact your administrator.';
+          }
+          
+          throw new Error(errorMessage); 
         }
         
         const data = await res.json();
@@ -238,15 +308,24 @@ export default function AssessmentPage() {
           throw new Error('Invalid response from server');
         }
         setAssessmentId(data.id);
+        setActiveStep((prev) => prev + 1);
       } catch (err: any) {
         console.error('Error creating assessment:', err);
         setError(err.message || 'Failed to create assessment');
-        return;
+      } finally {
+        setLoading(false);
       }
+      return;
     }
     
     // Submit on step 1 (now the questions step)
     if (activeStep === 1) {
+      // Check if we have any answers to submit
+      if (Object.keys(answers).length === 0) {
+        setError('Please provide at least one answer before submitting.');
+        return;
+      }
+      
       setLoading(true);
       try {
         const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
@@ -271,18 +350,30 @@ export default function AssessmentPage() {
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Submission failed');
+          const errorData = await res.json().catch(() => ({}));
+          let errorMessage = errorData.error || 'Submission failed';
+          
+          if (errorMessage.includes('Invalid reference') || 
+              errorMessage.includes('do not exist') || 
+              errorMessage.includes('dimensions are no longer available')) {
+            errorMessage = 'There appears to be a configuration issue with the selected dimensions. This may happen if the assessment template was changed after you started. Please go back and try again with a new assessment.';
+          }
+          
+          throw new Error(errorMessage);
         }
+        
         setSuccess(true);
+        setActiveStep((prev) => prev + 1);
       } catch (err: any) {
         console.error('Error submitting assessment:', err);
         setError(err.message || 'Failed to submit assessment');
-        return;
       } finally {
         setLoading(false);
       }
+      return;
     }
+    
+    // If we're on the last step or any other step not handled above
     setActiveStep((prev) => prev + 1);
   };
 
@@ -459,6 +550,19 @@ export default function AssessmentPage() {
           {activeStep === 1 && (
             templateLoading ? (
               Array(3).fill(null).map((_, i) => <Skeleton key={i} variant="rectangular" height={100} sx={{ mb: 2 }} />)
+            ) : error ? (
+              <Paper sx={{ p: 3, mt: 2, textAlign: 'center' }}>
+                <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+                <Button variant="contained" onClick={handleBack}>Back</Button>
+              </Paper>
+            ) : template.length === 0 || !template.some((category: Category) => category.dimensions && category.dimensions.length > 0) ? (
+              <Paper sx={{ p: 3, mt: 2, textAlign: 'center' }}>
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  No dimensions available for assessment in this company/department. 
+                  This could be because the sector does not have maturity descriptors configured for its dimensions.
+                </Alert>
+                <Button variant="contained" onClick={handleBack}>Back</Button>
+              </Paper>
             ) : (
               <Box>
                 {template.map((category) => {
@@ -556,6 +660,55 @@ export default function AssessmentPage() {
                     </Accordion>
                   );
                 })}
+                
+                {/* Only show evidence upload section if we have an assessmentId (assessment has been created in the backend) */}
+                {assessmentId && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Evidence & Supporting Documents
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      You can provide evidence and supporting documents for your assessment. This helps reviewers understand the basis for your scores.
+                    </Typography>
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography>Upload Evidence Documents</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          Please select a dimension from the list below to add evidence for:
+                        </Typography>
+                        <Box sx={{ p: 2, border: '1px solid #eee', borderRadius: '4px', mb: 2 }}>
+                          <FormControl fullWidth>
+                            <InputLabel id="dimension-evidence-select-label">Select Dimension for Evidence</InputLabel>
+                            <Select
+                              labelId="dimension-evidence-select-label"
+                              id="dimension-evidence-select"
+                              value={selectedEvidenceDimension || ''}
+                              onChange={(e) => setSelectedEvidenceDimension(e.target.value)}
+                              label="Select Dimension for Evidence"
+                            >
+                              {template.flatMap(category => 
+                                category.dimensions.map(dimension => (
+                                  <MenuItem key={dimension.id} value={dimension.id}>
+                                    {category.name} - {dimension.name}
+                                  </MenuItem>
+                                ))
+                              )}
+                            </Select>
+                          </FormControl>
+                        </Box>
+                        
+                        {selectedEvidenceDimension && (
+                          <EvidenceUpload 
+                            assessmentId={assessmentId}
+                            dimensionId={selectedEvidenceDimension}
+                          />
+                        )}
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+                )}
               </Box>
             )
           )}

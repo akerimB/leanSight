@@ -256,7 +256,7 @@ export default function EditWeightingSchemePage() {
 
       <Paper sx={{ p: 3 }}>
         <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
                 <TextField
                     name="name"
                     label="Scheme Name"
@@ -268,13 +268,13 @@ export default function EditWeightingSchemePage() {
                     disabled={saving}
                 />
             </Grid>
-            <Grid item xs={12} md={4} sx={{display: 'flex', alignItems: 'center'}}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{display: 'flex', alignItems: 'center'}}>
                  <FormControlLabel
                     control={<Checkbox name="isDefault" checked={formData.isDefault} onChange={handleInputChange} disabled={saving} />}
                     label="Set as Default Scheme"
                 />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
                 <TextField
                     name="description"
                     label="Description (Optional)"

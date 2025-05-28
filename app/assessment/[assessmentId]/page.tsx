@@ -20,9 +20,14 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import prisma from '@/lib/prisma';
 import { toast } from 'sonner';
+import EvidenceUpload from '@/app/components/EvidenceUpload';
 
 interface Descriptor { id: string; level: number; description: string }
 interface Dimension { id: string; name: string; descriptors: Descriptor[] }
@@ -118,7 +123,7 @@ export default function AssessmentDetailPage() {
     }
 
     let overallAssessmentScore = 0;
-    const newCategoryScores: Record<string, { name: string; score: number; weight: number; possibleScore: number; percentage: number; dimensions: Record<string, { name: string; score: number; weight: number; level:number; possibleScore: number; percentage: number; }> }> = {};
+    const newCategoryScores: Record<string, { name: string; score: number; weight: number; possibleScore: number; percentage: number; dimensions: Record<string, { name: string; score: number; weight: number; level: number; possibleScore: number; percentage: number; }> }> = {};
 
     const schemeToUse = currentAssessment.weightingScheme;
     const rawScoresMap: Record<string, number> = {};
@@ -281,6 +286,8 @@ export default function AssessmentDetailPage() {
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!assessment) return <Alert severity="warning">Assessment not found</Alert>;
 
+  const isReadOnly = statusValue === 'REVIEWED';
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
@@ -365,6 +372,24 @@ export default function AssessmentDetailPage() {
                     />
                   ))}
                 </RadioGroup>
+                
+                {/* Evidence Upload Section */}
+                <Accordion>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls={`evidence-content-${dim.id}`}
+                    id={`evidence-header-${dim.id}`}
+                  >
+                    <Typography>Evidence and Supporting Documents</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <EvidenceUpload
+                      assessmentId={assessmentId}
+                      dimensionId={dim.id}
+                      readOnly={isReadOnly}
+                    />
+                  </AccordionDetails>
+                </Accordion>
               </CardContent>
             </Card>
           ))}

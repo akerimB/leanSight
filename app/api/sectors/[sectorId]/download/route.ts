@@ -5,14 +5,14 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sectorId: string } }
+  context: { params: Promise<{ sectorId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const sectorId = params.sectorId;
+  const { sectorId } = await context.params;
 
   try {
     const sector = await prisma.sector.findUnique({
