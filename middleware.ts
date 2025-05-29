@@ -1,13 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { Role } from '@prisma/client';
 
 // Paths that don't require authentication
 const PUBLIC_PATHS = [
+  '/',
   '/auth/signin',
   '/auth/signout',
   '/auth/error',
   '/api/auth',
+  '/test-auth',
+];
+
+// Paths that require admin access
+const ADMIN_PATHS = [
+  '/admin',
+  '/api/admin',
 ];
 
 export async function middleware(request: NextRequest) {
@@ -46,6 +55,16 @@ export async function middleware(request: NextRequest) {
     const signInUrl = new URL('/auth/signin', request.url);
     signInUrl.searchParams.set('callbackUrl', encodeURI(request.url));
     return NextResponse.redirect(signInUrl);
+  }
+
+  // Check role-based access for admin paths
+  const isAdminPath = ADMIN_PATHS.some(path => 
+    pathname.startsWith(path)
+  );
+
+  if (isAdminPath && token.role !== Role.ADMIN) {
+    // Redirect non-admin users trying to access admin routes
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // User is authenticated, proceed with the request

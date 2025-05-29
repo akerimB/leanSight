@@ -1,16 +1,16 @@
 import './globals.css';
-import Layout from '@/components/Layout'; // Restoring usage of Layout component
 import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
 // getServerSession, SessionProvider, DashboardSidebar are managed by Layout.tsx
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ClientProviders from '@/components/ClientProviders';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "LeanSight",
-  description: "Comprehensive Maturity Assessment Platform",
+  title: 'LeanSight - Maturity Assessment Platform',
+  description: 'A comprehensive maturity assessment platform',
   manifest: "/manifest.json",
   themeColor: "#1976d2",
   appleWebApp: {
@@ -37,9 +37,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className={inter.className}>
       <head>
@@ -51,8 +51,10 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/icons/apple-icon-180x180.png" />
       </head>
-      <body style={{ margin: 0 }}> 
-        <Layout>{children}</Layout>
+      <body style={{ margin: 0 }}>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
         <ToastContainer
             position="top-right"
             autoClose={5000}
@@ -64,7 +66,7 @@ export default function RootLayout({
             draggable
             pauseOnHover
             theme="light"
-          />
+        />
       </body>
     </html>
   );
