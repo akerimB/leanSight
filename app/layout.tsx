@@ -2,9 +2,8 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
 // getServerSession, SessionProvider, DashboardSidebar are managed by Layout.tsx
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ClientProviders from '@/components/ClientProviders';
+import { Toaster } from 'sonner';
+import ClientProviders from '../components/ClientProviders';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -55,18 +54,7 @@ export default function RootLayout({
         <ClientProviders>
           {children}
         </ClientProviders>
-        <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-        />
+        <Toaster position="top-right" />
       </body>
     </html>
   );

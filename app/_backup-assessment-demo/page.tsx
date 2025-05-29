@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, Divider, Alert } from '@mui/material';
+import { Container, Typography, Box, Paper, Tabs, Tab, Divider, Alert, Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import HoverRevealText from '@/components/HoverRevealText';
 import MaturityOption from '@/components/MaturityOption';
 import MaturityAssessment from '@/components/MaturityAssessment';
 import { toast } from 'sonner';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 
 // Sample data for the maturity levels
 const leadershipMaturityLevels = [
@@ -134,6 +136,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function AssessmentDemoPage() {
+  const router = useRouter();
   const [tabValue, setTabValue] = useState(0);
   const [leadershipValue, setLeadershipValue] = useState('3');
   const [strategyValue, setStrategyValue] = useState('3');
@@ -147,12 +150,26 @@ export default function AssessmentDemoPage() {
     console.log('Assessment data saved:', assessmentData);
     toast.success('Assessment data saved successfully!');
   };
+  
+  const navigateToFullAssessment = () => {
+    router.push('/assessment');
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Maturity Assessment Demo
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          Maturity Assessment Demo
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={navigateToFullAssessment}
+          startIcon={<AssessmentIcon />}
+        >
+          Go to Full Assessment
+        </Button>
+      </Box>
       
       <Typography variant="body1" paragraph>
         This page demonstrates different ways to display and interact with maturity level descriptions.
@@ -218,6 +235,17 @@ export default function AssessmentDemoPage() {
           This is a complete assessment form with support for notes and evidence attachments.
           Hover over options to see truncated descriptions, or expand them to see the full text.
         </Alert>
+        <Box sx={{ mb: 3 }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={navigateToFullAssessment}
+            startIcon={<AssessmentIcon />}
+            fullWidth
+          >
+            Continue to Full Assessment
+          </Button>
+        </Box>
         <MaturityAssessment 
           dimensions={dimensions}
           onSave={handleSaveAssessment}

@@ -1,8 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Container, Typography, Box, Paper, Grid, Card, CardContent } from '@mui/material';
+import { 
+  Container, 
+  Typography, 
+  Box, 
+  Paper, 
+  Card, 
+  CardContent,
+  Grid as MuiGrid
+} from '@mui/material';
 import HoverRevealText from '@/components/HoverRevealText';
+
+const Grid = MuiGrid as any; // Temporary type assertion to fix the TypeScript error
 
 const longText = "Leadership's unwavering, visible, and deeply ingrained commitment to Lean/QI principles, patient safety, and continuous improvement is a fundamental and widely recognized driver of the healthcare organization's sustained, world-class performance in clinical outcomes, patient experience, operational efficiency, and staff well-being. Hospital/clinic leaders are viewed as national or international exemplars and mentors in Lean healthcare transformation, actively developing future QI leaders from within the organization and contributing to the broader healthcare improvement community (e.g., through publications, presentations, hosting site visits). The Lean/QI philosophy and its application extend beyond the organization's walls to active collaboration with community health partners, primary care physicians, payers, and patient advocacy groups to improve population health and optimize the entire continuum of care. The healthcare organization is frequently a benchmark facility that other institutions visit to learn about world-class Lean leadership, deeply embedded culture of safety and improvement, and exemplary patient-centered care delivery. Continuous improvement is not seen as a program, but as the fundamental way the organization operates and strives for excellence in all aspects of healthcare.";
 

@@ -47,6 +47,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import EvidenceUpload from '@/app/components/EvidenceUpload';
+import HoverRevealText from '@/components/HoverRevealText';
 
 interface Company {
   id: string;
@@ -84,6 +85,29 @@ export default function AssessmentPage() {
     required: true,
     onUnauthenticated() { router.push('/auth/signin'); },
   });
+
+  // Parse URL query parameters for direct links
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      const idParam = urlParams.get('id');
+      
+      console.log('URL parameters:', { tab: tabParam, id: idParam });
+      
+      // Set tab if specified in URL
+      if (tabParam === 'past') {
+        setTab('past');
+        console.log('Setting tab to "past"');
+      }
+      
+      // Load specific assessment if ID is provided
+      if (idParam) {
+        console.log(`Attempting to resume assessment with ID: ${idParam}`);
+        handleResume(idParam);
+      }
+    }
+  }, []);
 
   // State for draft assessment and past assessments
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
@@ -130,6 +154,9 @@ export default function AssessmentPage() {
 
   // State for evidence upload
   const [selectedEvidenceDimension, setSelectedEvidenceDimension] = useState<string | null>(null);
+
+  // Add a state for the warning dialog about incomplete answers
+  const [incompleteWarningOpen, setIncompleteWarningOpen] = useState(false);
 
   // Load past assessments list
   useEffect(() => {
@@ -269,6 +296,7 @@ export default function AssessmentPage() {
     if (activeStep === 0 && (!selectedCompany || !selectedDepartment)) {
       setError('Please select both a company and a department'); return;
     }
+    
     // Create draft on step 0 when moving to questions
     if (activeStep === 0 && !assessmentId) {
       try {
@@ -326,66 +354,103 @@ export default function AssessmentPage() {
         return;
       }
       
-      setLoading(true);
-      try {
-        const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
-        const answersArray = Object.entries(answers).map(([dimensionId, level]) => ({ 
-          dimensionId, 
-          level 
-        }));
-
-        const res = await fetch('/api/assessments', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            companyId: selectedCompany,
-            departmentId,
-            answers: answersArray,
-            weightingSchemeId: selectedWeightingSchemeId || null,
-          }),
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          let errorMessage = errorData.error || 'Submission failed';
-          
-          if (errorMessage.includes('Invalid reference') || 
-              errorMessage.includes('do not exist') || 
-              errorMessage.includes('dimensions are no longer available')) {
-            errorMessage = 'There appears to be a configuration issue with the selected dimensions. This may happen if the assessment template was changed after you started. Please go back and try again with a new assessment.';
-          }
-          
-          throw new Error(errorMessage);
-        }
-        
-        setSuccess(true);
-        setActiveStep((prev) => prev + 1);
-      } catch (err: any) {
-        console.error('Error submitting assessment:', err);
-        setError(err.message || 'Failed to submit assessment');
-      } finally {
-        setLoading(false);
+      // Check if assessment is incomplete
+      const totalDimensions = template.reduce((sum, cat) => sum + cat.dimensions.length, 0);
+      const answeredDimensions = Object.keys(answers).length;
+      
+      // If answers are incomplete, show warning but allow proceeding
+      if (answeredDimensions < totalDimensions) {
+        setIncompleteWarningOpen(true);
+        return;
       }
-      return;
+      
+      await submitAssessment();
     }
     
     // If we're on the last step or any other step not handled above
     setActiveStep((prev) => prev + 1);
   };
 
+  // Extracted the submission logic to a separate function
+  const submitAssessment = async () => {
+    setLoading(true);
+    try {
+      const departmentId = selectedDepartment === 'all' ? null : selectedDepartment;
+      const answersArray = Object.entries(answers).map(([dimensionId, level]) => ({ 
+        dimensionId, 
+        level 
+      }));
+
+      const res = await fetch('/api/assessments', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          companyId: selectedCompany,
+          departmentId,
+          answers: answersArray,
+          weightingSchemeId: selectedWeightingSchemeId || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        let errorMessage = errorData.error || 'Submission failed';
+        
+        if (errorMessage.includes('Invalid reference') || 
+            errorMessage.includes('do not exist') || 
+            errorMessage.includes('dimensions are no longer available')) {
+          errorMessage = 'There appears to be a configuration issue with the selected dimensions. This may happen if the assessment template was changed after you started. Please go back and try again with a new assessment.';
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      setSuccess(true);
+      setActiveStep((prev) => prev + 1);
+    } catch (err: any) {
+      console.error('Error submitting assessment:', err);
+      setError(err.message || 'Failed to submit assessment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle continuing with incomplete answers
+  const handleContinueIncomplete = () => {
+    setIncompleteWarningOpen(false);
+    submitAssessment();
+  };
+
+  // Function to cancel and continue editing
+  const handleCancelIncomplete = () => {
+    setIncompleteWarningOpen(false);
+  };
+
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
   // Resume past assessment
   const handleResume = async (id: string) => {
-    setTab('new');
     try {
+      console.log(`handleResume called with id: ${id}`);
       const res = await fetch(`/api/assessments?id=${id}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to load assessment');
+      
+      if (!res.ok) {
+        console.error(`Failed to load assessment: ${res.status} ${res.statusText}`);
+        throw new Error('Failed to load assessment');
+      }
+      
       const data = await res.json();
+      console.log('Assessment data loaded:', { 
+        companyId: data.company?.id,
+        departmentId: data.departmentId,
+        status: data.status,
+        scoreCount: data.scores?.length
+      });
+      
       setSelectedCompany(data.company.id);
       setSelectedDepartment(data.departmentId ?? 'all');
       const loaded: Record<string, number> = {};
@@ -393,8 +458,10 @@ export default function AssessmentPage() {
       setAnswers(loaded);
       setAssessmentId(id);
       setActiveStep(1);
+      setTab('new'); // Switch to the assessment editing view
+      console.log('Assessment resumed successfully, tab set to "new", moving to step 1');
     } catch (err: any) {
-      console.error(err);
+      console.error('Error resuming assessment:', err);
       setError('Failed to resume assessment');
     }
   };
@@ -406,13 +473,13 @@ export default function AssessmentPage() {
       setEditAssessmentStatus(status);
       setEditDialogOpen(true);
     } else {
+      // For DRAFT status, directly resume without confirmation
       handleResume(id);
     }
   };
 
   const confirmEdit = () => {
     if (editAssessmentId) {
-      setTab('new');
       handleResume(editAssessmentId);
     }
     setEditDialogOpen(false);
@@ -467,15 +534,17 @@ export default function AssessmentPage() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>Lean Maturity Assessment</Typography>
-      <Box sx={{ mb: 3 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+      
+      {/* Tab selection for new or past assessments */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={tab} onChange={(_, newValue) => setTab(newValue)} aria-label="assessment tabs">
           <Tab label="New Assessment" value="new" />
           <Tab label="Past Assessments" value="past" />
         </Tabs>
-      </Box>
+      </Paper>
 
-      {/* New Assessment Wizard */}
-      {tab === 'new' && (
+      {tab === 'new' ? (
+        // New Assessment Flow
         <>
           <Paper sx={{ p: 3, mb: 1 }}>
             <Stepper activeStep={activeStep} alternativeLabel>
@@ -565,6 +634,23 @@ export default function AssessmentPage() {
               </Paper>
             ) : (
               <Box>
+                {/* Overall Progress Indicator */}
+                <Paper sx={{ p: 2, mb: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="subtitle1">Overall Completion</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {Object.keys(answers).length} of {template.reduce((sum, cat) => sum + cat.dimensions.length, 0)} questions answered
+                    </Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={
+                      (Object.keys(answers).length / template.reduce((sum, cat) => sum + cat.dimensions.length, 0)) * 100
+                    } 
+                    sx={{ height: 10, borderRadius: 5 }}
+                  />
+                </Paper>
+
                 {template.map((category) => {
                   // Calculate per-category progress
                   const total = category.dimensions.length;
@@ -647,7 +733,26 @@ export default function AssessmentPage() {
                                             color="primary"
                                           />
                                         </Box>
-                                        <Box component="td" sx={{ p: 1 }}>{desc.description}</Box>
+                                        <Box component="td" sx={{ p: 1 }}>
+                                          <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                            <Box sx={{ mr: 1 }}>
+                                              <Chip 
+                                                label={`Level ${desc.level}`} 
+                                                size="small" 
+                                                color={
+                                                  desc.level === 1 ? 'error' :
+                                                  desc.level === 2 ? 'warning' :
+                                                  desc.level === 3 ? 'info' :
+                                                  desc.level === 4 ? 'success' :
+                                                  desc.level === 5 ? 'success' :
+                                                  'default'
+                                                }
+                                                sx={{ mb: 1 }}
+                                              />
+                                            </Box>
+                                          </Box>
+                                          <HoverRevealText text={desc.description} maxLines={2} />
+                                        </Box>
                                       </Box>
                                     ))}
                                   </Box>
@@ -733,84 +838,134 @@ export default function AssessmentPage() {
               onClick={handleNext}
               disabled={
                 (activeStep === 0 && (!selectedCompany || !selectedDepartment)) ||
-                (activeStep === 1 && Object.keys(answers).length < template.reduce((sum, cat) => sum + cat.dimensions.length, 0)) ||
+                (activeStep === 1 && Object.keys(answers).length === 0) ||
                 (activeStep === 1 && loading)
               }
             >
               {activeStep === 1 ? 'Submit' : 'Next'}
             </Button>
           </Box>
-
-          <Snackbar open={Boolean(success)} autoHideDuration={6000} onClose={() => {}}>
-            <Alert severity="success">Assessment submitted successfully</Alert>
-          </Snackbar>
         </>
+      ) : (
+        // Past Assessments List
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Past Assessments</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <TextField
+                placeholder="Search assessments..."
+                variant="outlined"
+                size="small"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ width: 250 }}
+              />
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={() => setTab('new')}
+              >
+                New Assessment
+              </Button>
+            </Box>
+          </Box>
+
+          {pastLoading ? (
+            <Box sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : pastAssessments.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">No assessments found</Typography>
+            </Box>
+          ) : (
+            <>
+              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', mb: 2 }}>
+                <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+                  <Box component="tr">
+                    <Box component="th" sx={{ p: 2, textAlign: 'left' }}>Company</Box>
+                    <Box component="th" sx={{ p: 2, textAlign: 'left' }}>Department</Box>
+                    <Box component="th" sx={{ p: 2, textAlign: 'left' }}>Date</Box>
+                    <Box component="th" sx={{ p: 2, textAlign: 'center' }}>Status</Box>
+                    <Box component="th" sx={{ p: 2, textAlign: 'right' }}>Score</Box>
+                    <Box component="th" sx={{ p: 2, textAlign: 'center' }}>Actions</Box>
+                  </Box>
+                </Box>
+                <Box component="tbody">
+                  {pagedAssessments.map((assessment) => (
+                    <Box 
+                      component="tr" 
+                      key={assessment.id}
+                      sx={{ 
+                        '&:hover': { backgroundColor: 'grey.50' },
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Box component="td" sx={{ p: 2 }}>{assessment.company.name}</Box>
+                      <Box component="td" sx={{ p: 2 }}>{assessment.department?.name ?? 'Company-wide'}</Box>
+                      <Box component="td" sx={{ p: 2 }}>{new Date(assessment.updatedAt).toLocaleDateString()}</Box>
+                      <Box component="td" sx={{ p: 2, textAlign: 'center' }}>
+                        <Chip 
+                          label={assessment.status} 
+                          color={
+                            assessment.status === 'DRAFT' ? 'warning' :
+                            assessment.status === 'SUBMITTED' ? 'info' :
+                            assessment.status === 'REVIEWED' ? 'success' : 
+                            'default'
+                          }
+                          size="small"
+                        />
+                      </Box>
+                      <Box component="td" sx={{ p: 2, textAlign: 'right' }}>
+                        {assessment.weightedAverageScore ? 
+                          assessment.weightedAverageScore.toFixed(1) : 
+                          assessment.rawAverageScore ? 
+                            assessment.rawAverageScore.toFixed(1) : 
+                            'N/A'
+                        }
+                      </Box>
+                      <Box component="td" sx={{ p: 2, textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                          <Button 
+                            size="small" 
+                            variant="outlined"
+                            onClick={() => handleEdit(assessment.id, assessment.status)}
+                          >
+                            {assessment.status === 'DRAFT' ? 'Continue' : 'View/Edit'}
+                          </Button>
+                          <IconButton 
+                            size="small" 
+                            color="error"
+                            onClick={() => openDeleteDialog(assessment.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+              
+              {filtered.length > pageSize && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <Pagination 
+                    count={Math.ceil(filtered.length / pageSize)}
+                    page={page}
+                    onChange={(_, newPage) => setPage(newPage)}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </>
+          )}
+        </Paper>
       )}
 
-      {/* Past Assessments Tab */}
-      {tab === 'past' && (
-        <Box>
-          <TextField
-            placeholder="Search past assessments"
-            value={searchTerm}
-            onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
-            sx={{ width: 300, mb: 2 }}
-          />
-          {pastLoading ? (
-            Array(3).fill(null).map((_, i) => (
-              <Skeleton key={i} variant="rectangular" height={48} sx={{ mb: 1 }} />
-            ))
-          ) : filtered.length ? (
-            <>
-              <List>
-                {pagedAssessments.map(a => (
-                  <ListItem key={a.id} secondaryAction={
-                    <Box>
-                      <Button size="small" onClick={() => handleEdit(a.id, a.status)} sx={{ mr: 1 }}>
-                        {a.status === 'SUBMITTED' ? 'Review/Edit' : 'Resume'}
-                      </Button>
-                      {(session?.user?.role === 'ADMIN' || session?.user?.id === a.expertId) && (
-                        <IconButton 
-                          onClick={() => openDeleteDialog(a.id)} 
-                          color="error" 
-                          size="small"
-                          aria-label="Delete assessment"
-                          disabled={deleting}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )}
-                    </Box>
-                  }>
-                    <ListItemText
-                      primary={`${a.company.name} - ${a.department?.name ?? 'Company-wide'}`}
-                      secondary={
-                        <>
-                          <Chip
-                            label={a.status === 'DRAFT' ? 'In Progress' : 'Submitted'}
-                            color={a.status === 'DRAFT' ? 'warning' : 'success'}
-                            size="small"
-                            sx={{ mr: 1 }}
-                          />
-                          {`${new Date(a.updatedAt).toLocaleString()} • ${a._count?.scores || 0} answers`}
-                        </>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              <Pagination
-                count={Math.ceil(filtered.length / pageSize)}
-                page={page}
-                onChange={(e, v) => setPage(v)}
-                sx={{ mt: 2, mb: 2 }}
-              />
-            </>
-          ) : (
-            <Typography color="text.secondary">No past assessments found.</Typography>
-          )}
-        </Box>
-      )}
+      <Snackbar open={Boolean(success)} autoHideDuration={6000} onClose={() => {}}>
+        <Alert severity="success">Assessment submitted successfully</Alert>
+      </Snackbar>
 
       {/* Edit Confirmation Dialog */}
       <Dialog open={editDialogOpen} onClose={cancelEdit}>
@@ -838,6 +993,37 @@ export default function AssessmentPage() {
           <Button onClick={handleDeleteAssessment} color="error" variant="contained" disabled={deleting}>
             {deleting ? <CircularProgress size={20} /> : 'Delete'}
           </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Incomplete Warning Dialog */}
+      <Dialog open={incompleteWarningOpen} onClose={handleCancelIncomplete}>
+        <DialogTitle>Incomplete Assessment</DialogTitle>
+        <DialogContent>
+          <Typography paragraph>
+            You have answered {Object.keys(answers).length} out of {template.reduce((sum, cat) => sum + cat.dimensions.length, 0)} questions.
+          </Typography>
+          <Typography paragraph>
+            Your assessment will be scored based only on the dimensions you've rated. The system will:
+          </Typography>
+          <Box component="ul" sx={{ pl: 2 }}>
+            <Box component="li">
+              <Typography>Automatically adjust category weights for missing dimension scores</Typography>
+            </Box>
+            <Box component="li">
+              <Typography>Calculate weighted averages using only the dimensions you've assessed</Typography>
+            </Box>
+            <Box component="li">
+              <Typography>Flag the assessment as partially complete in reports</Typography>
+            </Box>
+          </Box>
+          <Typography paragraph sx={{ mt: 2 }}>
+            For best results, try to answer all questions for a more comprehensive evaluation.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelIncomplete}>Continue Editing</Button>
+          <Button onClick={handleContinueIncomplete} variant="contained" color="primary">Submit Anyway</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -2,23 +2,37 @@
 
 import React from 'react';
 import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { Toaster } from 'sonner';
-import NavBar from '@/components/NavBar';
-import theme from '@/lib/theme';
+import { ThemeProvider, createTheme } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import Layout from './Layout';
 
-export default function ClientProviders({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Create a theme instance
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+});
+
+export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Toaster richColors position="top-right" />
-        <NavBar />
-        <main>{children}</main>
+        <Layout>{children}</Layout>
       </ThemeProvider>
     </SessionProvider>
   );

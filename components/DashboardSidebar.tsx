@@ -21,18 +21,6 @@ import { signOut } from 'next-auth/react';
 
 const drawerWidth = 260;
 
-const menuItems = [
-  { label: 'Dashboard', icon: <DashboardIcon />, href: '/dashboard' },
-  { label: 'Assessment', icon: <AssessmentIcon />, href: '/assessment' },
-  { label: 'Companies/Departments', icon: <BusinessIcon />, href: '/companies' },
-  { label: 'Weighting Schemes', icon: <BalanceIcon />, href: '/weighting-schemes' },
-  { label: 'Sectors', icon: <CategoryIcon />, href: '/sectors' },
-  { label: 'Analytics', icon: <BarChartIcon />, href: '/analytics' },
-  { label: 'Results', icon: <ShowChartIcon />, href: '/results' },
-  { label: 'Settings', icon: <SettingsIcon />, href: '/settings' },
-  { label: 'Admin', icon: <AdminPanelSettingsIcon />, href: '/admin' },
-];
-
 export default function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
@@ -61,9 +49,8 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
         <List sx={{ flexGrow: 1 }}>
           {[
             { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
-            { label: 'Sectors', href: '/sectors', icon: <BusinessIcon /> },
-            { label: 'Companies/Departments', href: '/companies', icon: <GroupIcon /> },
             { label: 'Assessment', href: '/assessment', icon: <AssessmentIcon /> },
+            { label: 'Companies/Departments', href: '/companies', icon: <BusinessIcon /> },
             { label: 'Weighting Schemes', href: '/weighting-schemes', icon: <TimelineIcon /> },
             { label: 'Results', href: '/results', icon: <ScoreIcon /> },
             { label: 'Analytics', href: '/analytics', icon: <BarChartIcon /> },
