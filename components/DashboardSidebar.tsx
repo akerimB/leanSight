@@ -56,10 +56,10 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
         <List sx={{ flexGrow: 1 }}>
           {[
             { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
-            { label: 'Assessment', href: '/assessment', icon: <AssessmentIcon /> },
-            { label: 'Companies/Departments', href: '/companies', icon: <BusinessIcon /> },
             { label: 'Sectors', href: '/sectors', icon: <CategoryIcon /> },
+            { label: 'Companies/Departments', href: '/companies', icon: <BusinessIcon /> },
             { label: 'Weighting Schemes', href: '/weighting-schemes', icon: <TimelineIcon /> },
+            { label: 'Assessment', href: '/assessment', icon: <AssessmentIcon /> },
             { label: 'Results', href: '/results', icon: <ScoreIcon /> },
             { label: 'Analytics', href: '/analytics', icon: <BarChartIcon /> },
             { label: 'LLM Demo', href: '/llm-demo', icon: <SmartToyIcon /> },
