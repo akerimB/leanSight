@@ -34,6 +34,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Role } from '@prisma/client';
+import Logo from './Logo';
 
 export default function NavBar() {
   const { data: session, status } = useSession();
@@ -95,11 +96,18 @@ export default function NavBar() {
             </IconButton>
           )}
           
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 1 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-              LeanSight
+              <Logo 
+                size="medium" 
+                showText={true}
+                sx={{ 
+                  '& .MuiTypography-root': { color: 'white' },
+                  '& .MuiSvgIcon-root': { color: 'white' }
+                }}
+              />
             </Link>
-          </Typography>
+          </Box>
           
           {status === 'loading' ? (
             <Box sx={{ width: 100 }} />
@@ -183,7 +191,7 @@ export default function NavBar() {
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6">Menu</Typography>
+          <Logo size="small" showText={true} />
         </Box>
         <Divider />
         <List>

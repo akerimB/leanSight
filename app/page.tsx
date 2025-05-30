@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, Button, Paper, Container, CircularProgress } from '@mui/material';
+import Logo from '@/components/Logo';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -29,7 +30,11 @@ export default function HomePage() {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Paper sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h3" component="h1" gutterBottom>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+          <Logo size="large" showText={true} />
+        </Box>
+        
+        <Typography variant="h3" component="h1" gutterBottom sx={{ mt: 2 }}>
           Welcome to LeanSight
         </Typography>
         <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>

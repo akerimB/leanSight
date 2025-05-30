@@ -2,30 +2,10 @@
 
 import React from 'react';
 import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeProvider } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './Layout';
-
-// Create a theme instance
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-  },
-});
+import theme from '@/lib/theme';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (

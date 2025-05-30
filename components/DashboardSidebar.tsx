@@ -19,6 +19,7 @@ import ScoreIcon from '@mui/icons-material/Score';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { signOut } from 'next-auth/react';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import Logo from './Logo';
 
 const drawerWidth = 260;
 
@@ -43,9 +44,14 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
         open
       >
         <Toolbar />
-        <Typography variant="h6" sx={{ p: 2 }}>
-          LeanSight
-        </Typography>
+        <Box sx={{ p: 2 }}>
+          <Logo 
+            size="medium" 
+            showText={true}
+            onClick={() => window.location.href = '/dashboard'}
+            sx={{ cursor: 'pointer' }}
+          />
+        </Box>
         <Divider />
         <List sx={{ flexGrow: 1 }}>
           {[
