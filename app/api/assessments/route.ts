@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Role, AssessmentStatus, Score, WeightingScheme, CategoryWeight, DimensionWeight, Dimension, Category } from '@prisma/client';
 import { z } from 'zod';
+import { cache, CacheKeys } from '@/lib/cache';
+import { broadcastUpdate } from '@/lib/broadcastUpdate';
 
 // Zod schema for PUT request validation
 const updateAssessmentSchema = z.object({
@@ -120,6 +122,20 @@ function calculateWeightedScore(
   }
 
   return { weightedAverageScore: totalWeightedScore / totalWeightSum, calculationUsed: 'weighted' };
+}
+
+// Helper function to invalidate analytics cache
+function invalidateAnalyticsCache(companyId?: string) {
+  // Clear all analytics summary cache entries
+  // In a more sophisticated implementation, we could be more selective
+  const stats = cache.getStats();
+  stats.keys.forEach(key => {
+    if (key.includes(CacheKeys.ANALYTICS_SUMMARY) || 
+        key.includes(CacheKeys.ANALYTICS_TRENDS)) {
+      cache.delete(key);
+    }
+  });
+  console.log('Invalidated analytics cache due to assessment change');
 }
 
 export async function POST(request: Request) {
@@ -343,6 +359,27 @@ export async function POST(request: Request) {
         }
       }
     }
+
+    // Broadcast real-time update for assessment creation
+    try {
+      broadcastUpdate({
+        type: 'assessment_created',
+        assessmentId: assessment.id,
+        companyId: assessment.companyId,
+        departmentId: assessment.departmentId,
+        status: assessment.status,
+        expertId: assessment.expertId
+      }, (client: any) => {
+        // Send to users of the same company or admins
+        return client.role === 'ADMIN' || client.companyId === assessment.companyId;
+      });
+    } catch (broadcastError) {
+      console.error('Failed to broadcast assessment creation:', broadcastError);
+      // Don't fail the request if broadcast fails
+    }
+
+    // Invalidate analytics cache
+    invalidateAnalyticsCache(assessment.companyId);
 
     return new NextResponse(JSON.stringify({ id: assessment.id }), {
       status: 201,
@@ -675,6 +712,27 @@ export async function PUT(request: Request) {
       });
     }
 
+    // Broadcast real-time update for assessment modification
+    try {
+      broadcastUpdate({
+        type: 'assessment_updated',
+        assessmentId: id,
+        companyId: existingAssessment.companyId,
+        departmentId: existingAssessment.departmentId,
+        changes: Object.keys(updateData),
+        status: updateData.status || existingAssessment.status
+      }, (client: any) => {
+        // Send to users of the same company or admins
+        return client.role === 'ADMIN' || client.companyId === existingAssessment.companyId;
+      });
+    } catch (broadcastError) {
+      console.error('Failed to broadcast assessment update:', broadcastError);
+      // Don't fail the request if broadcast fails
+    }
+
+    // Invalidate analytics cache
+    invalidateAnalyticsCache(existingAssessment.companyId);
+
     return new NextResponse(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -733,6 +791,9 @@ export async function DELETE(request: Request) {
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    // Invalidate analytics cache
+    invalidateAnalyticsCache(assessmentToUpdate.companyId);
 
     return new NextResponse(JSON.stringify({ message: 'Assessment soft deleted successfully' }), {
       status: 200,

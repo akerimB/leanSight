@@ -17,46 +17,28 @@ const updateSectorSchema = z.object({
 
 // GET all sectors
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  const excludeId = searchParams.get('excludeId');
-
   try {
-    const whereClause: any = {
-      deletedAt: null,
-    };
-
-    if (excludeId) {
-      whereClause.id = {
-        not: excludeId,
-      };
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const sectors = await prisma.sector.findMany({
-      where: whereClause,
-      include: {
-        _count: {
-          select: {
-            descriptors: { where: { deletedAt: null } },
-            companies: { where: { deletedAt: null } },
-          },
-        },
+      where: { deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        description: true
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy: { name: 'asc' }
     });
 
     return NextResponse.json(sectors);
+
   } catch (error) {
     console.error('Error fetching sectors:', error);
     return NextResponse.json(
-      { message: 'Error fetching sectors' },
+      { error: 'Failed to fetch sectors' },
       { status: 500 }
     );
   }

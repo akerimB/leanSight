@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Role, AssessmentStatus } from '@prisma/client';
+import { cache, CacheKeys, CacheTTL } from '@/lib/cache';
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -17,48 +18,90 @@ export async function GET(request: Request) {
   const timeRange = url.searchParams.get('timeRange') || 'last30days';
   const filterCompanyId = url.searchParams.get('companyId');
   const filterDepartmentId = url.searchParams.get('departmentId');
+  const filterSectorId = url.searchParams.get('sectorId');
+
+  // Advanced filter parameters
+  const statusFilters = url.searchParams.getAll('status') as AssessmentStatus[];
+  const minScore = url.searchParams.get('minScore');
+  const maxScore = url.searchParams.get('maxScore');
+  const dimensionFilters = url.searchParams.getAll('dimensionId');
+  const customStartDate = url.searchParams.get('startDate');
+  const customEndDate = url.searchParams.get('endDate');
+
+  // Generate cache key based on all parameters and user context
+  const cacheParams = {
+    timeRange,
+    filterCompanyId,
+    filterDepartmentId,
+    filterSectorId,
+    statusFilters: statusFilters.join(','),
+    minScore,
+    maxScore,
+    dimensionFilters: dimensionFilters.join(','),
+    customStartDate,
+    customEndDate,
+    userRole,
+    userCompanyId
+  };
+  
+  const cacheKey = cache.generateKey(CacheKeys.ANALYTICS_SUMMARY, cacheParams);
+  
+  // Try to get cached data first
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    console.log('Serving analytics summary from cache');
+    return NextResponse.json(cachedData);
+  }
 
   const to = new Date();
   let from: Date;
   let fromPrev: Date; // Start of the previous period
   let toPrev: Date;   // End of the previous period
 
-  switch (timeRange) {
-    case 'last7days':
-      const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      from = new Date(Date.now() - sevenDays);
-      toPrev = new Date(from.getTime() - 1); // End of prev period is 1ms before start of current
-      fromPrev = new Date(toPrev.getTime() - sevenDays + 1);
-      break;
-    case 'last30days':
-      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-      from = new Date(Date.now() - thirtyDays);
-      toPrev = new Date(from.getTime() - 1);
-      fromPrev = new Date(toPrev.getTime() - thirtyDays + 1);
-      break;
-    case 'last90days':
-      const ninetyDays = 90 * 24 * 60 * 60 * 1000;
-      from = new Date(Date.now() - ninetyDays);
-      toPrev = new Date(from.getTime() - 1);
-      fromPrev = new Date(toPrev.getTime() - ninetyDays + 1);
-      break;
-    case 'lastYear':
-      from = new Date(new Date().setFullYear(to.getFullYear() - 1));
-      toPrev = new Date(from.getTime() - 1);
-      // For lastYear, the previous period is the year before that.
-      fromPrev = new Date(new Date(toPrev).setFullYear(toPrev.getFullYear() - 1));
-      fromPrev.setDate(fromPrev.getDate() +1); // Adjust to be start of year typically
-      break;
-    default: // Default to last30days logic
-      const defaultDays = 30 * 24 * 60 * 60 * 1000;
-      from = new Date(Date.now() - defaultDays);
-      toPrev = new Date(from.getTime() - 1);
-      fromPrev = new Date(toPrev.getTime() - defaultDays + 1);
+  // Handle custom date range
+  if (timeRange === 'custom' && customStartDate && customEndDate) {
+    from = new Date(customStartDate);
+    const customTo = new Date(customEndDate);
+    const duration = customTo.getTime() - from.getTime();
+    
+    // Calculate previous period of same duration
+    toPrev = new Date(from.getTime() - 1);
+    fromPrev = new Date(toPrev.getTime() - duration + 1);
+  } else {
+    // Existing logic for predefined ranges
+    switch (timeRange) {
+      case 'last7days':
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        from = new Date(Date.now() - sevenDays);
+        toPrev = new Date(from.getTime() - 1); // End of prev period is 1ms before start of current
+        fromPrev = new Date(toPrev.getTime() - sevenDays + 1);
+        break;
+      case 'last30days':
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        from = new Date(Date.now() - thirtyDays);
+        toPrev = new Date(from.getTime() - 1);
+        fromPrev = new Date(toPrev.getTime() - thirtyDays + 1);
+        break;
+      case 'last90days':
+        const ninetyDays = 90 * 24 * 60 * 60 * 1000;
+        from = new Date(Date.now() - ninetyDays);
+        toPrev = new Date(from.getTime() - 1);
+        fromPrev = new Date(toPrev.getTime() - ninetyDays + 1);
+        break;
+      case 'lastYear':
+        from = new Date(new Date().setFullYear(to.getFullYear() - 1));
+        toPrev = new Date(from.getTime() - 1);
+        // For lastYear, the previous period is the year before that.
+        fromPrev = new Date(new Date(toPrev).setFullYear(toPrev.getFullYear() - 1));
+        fromPrev.setDate(fromPrev.getDate() +1); // Adjust to be start of year typically
+        break;
+      default: // Default to last30days logic
+        const defaultDays = 30 * 24 * 60 * 60 * 1000;
+        from = new Date(Date.now() - defaultDays);
+        toPrev = new Date(from.getTime() - 1);
+        fromPrev = new Date(toPrev.getTime() - defaultDays + 1);
+    }
   }
-
-  // Filter assessments by date and company (if not admin)
-  const assessmentWhereCurrent: any = { createdAt: { gte: from, lte: to } };
-  const assessmentWherePrevious: any = { createdAt: { gte: fromPrev, lte: toPrev } };
 
   // Apply company filter
   let effectiveCompanyId = userCompanyId; // Default to user's own company for non-admins
@@ -73,26 +116,69 @@ export async function GET(request: Request) {
   // If an admin wants data for a specific company, they must provide filterCompanyId.
   // If an admin wants ALL companies, they provide no filterCompanyId (effectiveCompanyId becomes null).
 
-  if (effectiveCompanyId) { // Apply company filter if an effectiveCompanyId is set
-    assessmentWhereCurrent.companyId = effectiveCompanyId;
-    assessmentWherePrevious.companyId = effectiveCompanyId;
-  } else if (userRole !== Role.ADMIN && !effectiveCompanyId) {
-    // This case implies a non-admin user has no companyId, which is problematic.
-    // For safety, prevent data leakage by ensuring they can't fetch anything.
-    assessmentWhereCurrent.companyId = '__NO_COMPANY_ACCESS__'; 
-    assessmentWherePrevious.companyId = '__NO_COMPANY_ACCESS__';
-  }
-  // If userRole is ADMIN and effectiveCompanyId is null, no companyId filter is applied (all companies).
+  // Build assessment where clauses with sector support
+  const buildAssessmentWhere = (dateFilter: any) => {
+    const where: any = { createdAt: dateFilter };
+    
+    // Apply sector filter first (affects which companies are included)
+    if (filterSectorId && userRole === Role.ADMIN) {
+      where.company = {
+        sectorId: filterSectorId
+      };
+    }
 
-  // Apply department filter (if provided)
-  if (filterDepartmentId) {
-    assessmentWhereCurrent.departmentId = filterDepartmentId;
-    assessmentWherePrevious.departmentId = filterDepartmentId;
-  }
+    // Apply company filter
+    if (effectiveCompanyId) {
+      if (where.company) {
+        where.company.id = effectiveCompanyId;
+      } else {
+        where.companyId = effectiveCompanyId;
+      }
+    } else if (userRole !== Role.ADMIN && !effectiveCompanyId) {
+      // This case implies a non-admin user has no companyId, which is problematic.
+      // For safety, prevent data leakage by ensuring they can't fetch anything.
+      where.companyId = '__NO_COMPANY_ACCESS__';
+    }
+    // If userRole is ADMIN and effectiveCompanyId is null, no companyId filter is applied (all companies).
+
+    // Apply department filter (if provided)
+    if (filterDepartmentId) {
+      where.departmentId = filterDepartmentId;
+    }
+
+    // Apply status filter (if provided)
+    if (statusFilters.length > 0) {
+      where.status = { in: statusFilters };
+    }
+
+    return where;
+  };
+
+  // Build score where clauses with advanced filters
+  const buildScoreWhere = (assessmentWhere: any) => {
+    const where: any = { assessment: assessmentWhere };
+    
+    // Apply score range filter
+    if (minScore || maxScore) {
+      where.level = {};
+      if (minScore) where.level.gte = parseFloat(minScore);
+      if (maxScore) where.level.lte = parseFloat(maxScore);
+    }
+
+    // Apply dimension filter
+    if (dimensionFilters.length > 0) {
+      where.dimensionId = { in: dimensionFilters };
+    }
+
+    return where;
+  };
+
+  const assessmentWhereCurrent = buildAssessmentWhere({ gte: from, lte: to });
+  const assessmentWherePrevious = buildAssessmentWhere({ gte: fromPrev, lte: toPrev });
 
   // 1. Fetch scores for overall avg and trends (CURRENT PERIOD)
   const scoresCurrent = await prisma.score.findMany({
-    where: { assessment: assessmentWhereCurrent },
+    where: buildScoreWhere(assessmentWhereCurrent),
     select: { level: true, assessment: { select: { createdAt: true, departmentId: true } } }
   });
 
@@ -102,7 +188,7 @@ export async function GET(request: Request) {
 
   // Fetch scores for PREVIOUS PERIOD overall average
   const scoresPrevious = await prisma.score.findMany({
-    where: { assessment: assessmentWherePrevious },
+    where: buildScoreWhere(assessmentWherePrevious),
     select: { level: true }
   });
 
@@ -135,7 +221,7 @@ export async function GET(request: Request) {
   // Dimension breakdown uses assessmentWhereCurrent
   const dimAvgs = await prisma.score.groupBy({
     by: ['dimensionId'],
-    where: { assessment: assessmentWhereCurrent },
+    where: buildScoreWhere(assessmentWhereCurrent),
     _avg: { level: true },
   });
   const dimensionIds = dimAvgs.map((d) => d.dimensionId);
@@ -152,7 +238,7 @@ export async function GET(request: Request) {
   // Calculate Dimension Breakdown for the PREVIOUS period
   const dimAvgsPrevious = await prisma.score.groupBy({
     by: ['dimensionId'],
-    where: { assessment: assessmentWherePrevious }, // Use previous period's assessment filter
+    where: buildScoreWhere(assessmentWherePrevious), // Use previous period's assessment filter
     _avg: { level: true },
   });
   const dimensionIdsPrevious = dimAvgsPrevious.map((d) => d.dimensionId);
@@ -351,7 +437,7 @@ export async function GET(request: Request) {
     return { departmentId: deptId, departmentName, categories: categoriesData };
   });
 
-  return NextResponse.json({
+  const responseData = {
     overallAvg: { current: overallAvgCurrent, previous: overallAvgPrevious },
     trends,
     scoreDistribution,
@@ -376,5 +462,10 @@ export async function GET(request: Request) {
     weakCategories,
     topDimensions,
     weakDimensions,
-  });
+  };
+
+  // Cache the response
+  cache.set(cacheKey, responseData, CacheTTL.MEDIUM);
+
+  return NextResponse.json(responseData);
 } 

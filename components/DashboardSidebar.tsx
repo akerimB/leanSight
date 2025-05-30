@@ -18,6 +18,7 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import ScoreIcon from '@mui/icons-material/Score';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { signOut } from 'next-auth/react';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 const drawerWidth = 260;
 
@@ -51,9 +52,11 @@ export default function DashboardSidebar({ children }: { children: React.ReactNo
             { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
             { label: 'Assessment', href: '/assessment', icon: <AssessmentIcon /> },
             { label: 'Companies/Departments', href: '/companies', icon: <BusinessIcon /> },
+            { label: 'Sectors', href: '/sectors', icon: <CategoryIcon /> },
             { label: 'Weighting Schemes', href: '/weighting-schemes', icon: <TimelineIcon /> },
             { label: 'Results', href: '/results', icon: <ScoreIcon /> },
             { label: 'Analytics', href: '/analytics', icon: <BarChartIcon /> },
+            { label: 'LLM Demo', href: '/llm-demo', icon: <SmartToyIcon /> },
             { label: 'Settings', href: '/settings', icon: <SettingsIcon /> },
             { label: 'Admin', href: '/admin', icon: <AdminPanelSettingsIcon /> },
           ].map((item) => (

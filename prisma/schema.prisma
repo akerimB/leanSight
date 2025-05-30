@@ -99,6 +99,11 @@ model Assessment {
   @@index([weightingSchemeId])
   @@index([status])
   @@index([deletedAt])
+  @@index([createdAt])
+  @@index([companyId, status])
+  @@index([companyId, createdAt])
+  @@index([status, createdAt])
+  @@index([companyId, departmentId, status])
 }
 
 model Category {
@@ -166,6 +171,13 @@ model Score {
   assessment   Assessment @relation(fields: [assessmentId], references: [id])
   dimension    Dimension  @relation(fields: [dimensionId], references: [id])
   deletedAt    DateTime?  // Soft delete
+
+  @@index([assessmentId])
+  @@index([dimensionId])
+  @@index([level])
+  @@index([deletedAt])
+  @@index([assessmentId, dimensionId])
+  @@index([dimensionId, level])
 }
 
 model Evidence {

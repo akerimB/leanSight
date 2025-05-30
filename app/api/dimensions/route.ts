@@ -1,28 +1,38 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
-export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
-
-  // Protected route - adjust role as needed, or just check for session
-  if (!session || session.user.role !== 'ADMIN') { // Assuming only admins can access raw dimension list
-    return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
-  }
-
+export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const dimensions = await prisma.dimension.findMany({
-      where: {
-        deletedAt: null, // Optionally, only fetch non-deleted dimensions
+      where: { deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       },
-      orderBy: {
-        name: 'asc', // Order by name for consistent listing
-      },
+      orderBy: { name: 'asc' }
     });
+
     return NextResponse.json(dimensions);
+
   } catch (error) {
     console.error('Error fetching dimensions:', error);
-    return NextResponse.json({ message: 'Error fetching dimensions' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch dimensions' },
+      { status: 500 }
+    );
   }
 } 
