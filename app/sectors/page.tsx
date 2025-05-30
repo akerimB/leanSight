@@ -43,14 +43,31 @@ export default function SectorsPage() {
   const fetchSectors = async () => {
     setLoading(true);
     try {
+      console.log('🔍 Fetching sectors from API...');
       const response = await fetch('/api/sectors');
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to fetch sectors');
       }
       const data = await response.json();
+      console.log('✅ Sectors API response received:', data);
+      console.log('📊 Number of sectors:', data.length);
+      
+      if (data.length > 0) {
+        console.log('🔍 Sample sector structure:', data[0]);
+        console.log('📋 First sector _count:', data[0]._count);
+        
+        // Check Pharmaceuticals & Biotechnology specifically
+        const pharma = data.find((s: any) => s.name === 'Pharmaceuticals & Biotechnology');
+        if (pharma) {
+          console.log('🧬 Pharmaceuticals & Biotechnology sector:', pharma);
+          console.log('💊 Pharma descriptors count:', pharma._count?.descriptors);
+        }
+      }
+      
       setSectors(data);
     } catch (error: any) {
+      console.error('❌ Error fetching sectors:', error);
       toast.error(error.message || 'Failed to load sectors');
       setSectors([]); // Ensure sectors is an array even on error
     } finally {
