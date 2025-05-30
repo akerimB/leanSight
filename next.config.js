@@ -8,9 +8,7 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  serverExternalPackages: ['@prisma/client'],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
