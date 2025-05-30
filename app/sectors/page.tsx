@@ -36,12 +36,6 @@ export default function SectorsPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Simple test to verify JS is running
-  useEffect(() => {
-    console.log('🚀 SectorsPage component mounted!');
-    alert('DEBUG: Sectors page loaded. Check console for details.');
-  }, []);
-
   useEffect(() => {
     fetchSectors();
   }, []);
