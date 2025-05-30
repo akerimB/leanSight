@@ -25,10 +25,13 @@ export async function GET(request: NextRequest) {
 
     const sectors = await prisma.sector.findMany({
       where: { deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        description: true
+      include: {
+        _count: {
+          select: {
+            descriptors: true,
+            companies: true
+          }
+        }
       },
       orderBy: { name: 'asc' }
     });
