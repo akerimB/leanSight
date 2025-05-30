@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🔍 Fetching sectors with counts...');
     const sectors = await prisma.sector.findMany({
       where: { deletedAt: null },
       include: {
@@ -35,6 +36,24 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { name: 'asc' }
     });
+
+    console.log(`✅ Found ${sectors.length} sectors`);
+    if (sectors.length > 0) {
+      console.log('📊 Sample sector with counts:', {
+        name: sectors[0].name,
+        _count: sectors[0]._count
+      });
+      
+      // Check Pharmaceuticals & Biotechnology specifically
+      const pharma = sectors.find(s => s.name === 'Pharmaceuticals & Biotechnology');
+      if (pharma) {
+        console.log('💊 Pharmaceuticals & Biotechnology:', {
+          name: pharma.name,
+          descriptors: pharma._count.descriptors,
+          companies: pharma._count.companies
+        });
+      }
+    }
 
     return NextResponse.json(sectors);
 
